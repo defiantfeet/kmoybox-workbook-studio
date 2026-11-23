@@ -4,7 +4,7 @@ A private growth studio for Keep Me Out of Your Box. Members can work through gu
 
 ## Local development
 
-Use Node.js 24, npm, a running Docker engine, and the [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started). The local setup was checked with CLI v2.80.0.
+Use Node.js 24, npm, a running Docker engine, and the [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started). The local configuration targets CLI v2.80.0.
 
 ```sh
 npm ci
