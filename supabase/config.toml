@@ -1,0 +1,25 @@
+project_id = "kmoybox-workbook-studio"
+
+[api]
+port = 54321
+
+[db]
+port = 54322
+major_version = 17
+
+[studio]
+port = 54323
+
+[inbucket]
+port = 54324
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/confirm"]
+
+[auth.email]
+enable_confirmations = true
+
+[auth.email.template.confirmation]
+subject = "Confirm your Workbook Studio account"
+content_path = "./supabase/confirmation.html"

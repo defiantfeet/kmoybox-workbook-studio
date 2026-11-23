@@ -1,0 +1,17 @@
+{
+  "products": [
+    {"slug":"finding-my-voice","title":"Finding My Voice","summary":"Make space for what you really think, feel, and need.","free":true},
+    {"slug":"the-boundaries-edit","title":"The Boundaries Edit","summary":"Practice setting limits that protect your time and energy.","free":false},
+    {"slug":"becoming-her","title":"Becoming Her","summary":"Picture the life you want and take one small step toward it.","free":false}
+  ],
+  "prompts": [
+    {"id":1,"product_slug":"finding-my-voice","position":1,"title":"Start with what you know","question":"When do you feel most like yourself? Describe a recent moment."},
+    {"id":2,"product_slug":"finding-my-voice","position":2,"title":"Notice what goes unsaid","question":"What have you been holding back? What would help you say it?"},
+    {"id":3,"product_slug":"finding-my-voice","position":3,"title":"Practice asking for what you need","question":"Write one sentence that communicates a need clearly and kindly."},
+    {"id":4,"product_slug":"finding-my-voice","position":4,"title":"Take one small step","question":"Where could you use your voice this week? What will you do first?"},
+    {"id":5,"product_slug":"the-boundaries-edit","position":1,"title":"Recognize your limits","question":"Describe a recent moment when you agreed to something you wanted to decline."},
+    {"id":6,"product_slug":"the-boundaries-edit","position":2,"title":"Make it clear","question":"Write a short, kind response you could use the next time this happens."},
+    {"id":7,"product_slug":"becoming-her","position":1,"title":"Imagine an ordinary day","question":"What does an ordinary morning look like in the life you want?"},
+    {"id":8,"product_slug":"becoming-her","position":2,"title":"Choose a next step","question":"What is one action you can take this week to move toward that vision?"}
+  ]
+}
