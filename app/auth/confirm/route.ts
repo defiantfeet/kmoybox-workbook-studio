@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authOrigin, clearRecovery } from '../../../lib/auth/recovery';
+import { authURL, clearRecovery } from '../../../lib/auth/recovery';
 import { demo, supabase } from '../../../lib/session';
 
 export async function GET(request: NextRequest) {
@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
     const { error } = await client.auth.verifyOtp({ token_hash, type: 'email' });
     if (!error) {
       await clearRecovery();
-      return NextResponse.redirect(new URL('/', authOrigin()), { headers });
+      return NextResponse.redirect(authURL('/'), { headers });
     }
   }
-  return NextResponse.redirect(new URL('/login?confirmation=failed', authOrigin()), { headers });
+  return NextResponse.redirect(authURL('/login?confirmation=failed'), { headers });
 }

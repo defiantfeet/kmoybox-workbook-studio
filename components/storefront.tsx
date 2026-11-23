@@ -1,3 +1,4 @@
+import { studioPath } from '../lib/studio-path';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, LockKeyhole } from 'lucide-react';
 import { startWorkbookCheckout } from '../lib/payments/actions';
@@ -56,7 +57,7 @@ export function Purchases({ rows, returned }: { rows: Awaited<ReturnType<typeof 
     <Heading title="Purchase history" subtitle="Your Stripe test purchases and their current access status." />
     {returned && <div className="panel form-panel">
       <p>Returned from Checkout. Access updates when Stripe confirms your payment.</p>
-      <a className="text-button" href="/purchases">Refresh purchase history</a>
+      <a className="text-button" href={studioPath('/purchases')}>Refresh purchase history</a>
     </div>}
     <div className="stack dashboard-section">
       {!rows.length && <p className="panel empty">No Stripe purchases yet. <Link href="/workbooks">Browse workbooks</Link></p>}

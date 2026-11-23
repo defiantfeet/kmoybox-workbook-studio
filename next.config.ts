@@ -1,7 +1,14 @@
 import type { NextConfig } from 'next';
+import { studioBasePath } from './lib/studio-path';
 
+if (studioBasePath !== '' && studioBasePath !== '/studio') {
+  throw new Error("NEXT_PUBLIC_STUDIO_BASE_PATH must be empty or '/studio'.");
+}
+
+const build = process.env.STUDIO_TEST_BUILD;
 const config: NextConfig = {
-  distDir: process.env.STUDIO_TEST_BUILD === '1' ? '.next-test' : process.env.STUDIO_TEST_BUILD === 'auth' ? '.next-auth-test' : '.next',
+  basePath: studioBasePath,
+  distDir: build === '1' ? '.next-test' : build === 'auth' ? '.next-auth-test' : build === 'staging' ? '.next-staging' : '.next',
   devIndicators: false,
   allowedDevOrigins: ['127.0.0.1'],
 };

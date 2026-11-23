@@ -22,7 +22,7 @@ select id, 'the-boundaries-edit' from auth.users where email = 'your-local-test-
 on conflict do nothing;
 ```
 
-The product library uses these entitlements. A checkout or external store integration is outside this development implementation. The workbooks in the seed catalog are sample editorial content.
+The product library uses these entitlements. Stripe Checkout is available in test mode when configured. The workbooks in the seed catalog are sample editorial content.
 
 For a credential-free preview, run `STUDIO_DEMO=1 npm run dev`. Open http://localhost:3000 to explore the labeled sample dashboard. Sample workbook, journal, and goal edits use a browser-scoped local demo session. The daily prompt and weekly goal date range use Pacific time. Use fictitious text in this mode.
 
@@ -37,6 +37,10 @@ npm run test:db
 ```
 
 Browser tests start an isolated sample server. Database tests run on the local Supabase stack and check privacy and product access with two users. The [development plan](DEVELOPMENT.md) records schema, routes, and acceptance criteria.
+
+## Launch and staging
+
+The [launch review](LAUNCH.md) records release verification, open issues, hosted staging setup, domain routing, and rollback.
 
 ## Author interactive workbooks
 

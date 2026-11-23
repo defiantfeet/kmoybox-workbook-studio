@@ -1,3 +1,4 @@
+import { studioPath } from '../lib/studio-path';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Download } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
@@ -31,7 +32,7 @@ export function WorkbookEngine({ workbook, selected }: { workbook: Workbook; sel
     <div className="panel progress-row">
       <p>{finished} of {modules.length} modules complete</p>
       <Meter label="Module completion" percent={Math.round(finished / modules.length * 100)} />
-      <a className="text-button" href={'/workbook-pdf/' + book.slug}><Download size={16} aria-hidden /> Download my responses (PDF)</a>
+      <a className="text-button" href={studioPath('/workbook-pdf/' + book.slug)}><Download size={16} aria-hidden /> Download my responses (PDF)</a>
     </div>
     <div className="module-layout">
       <nav className="panel module-outline" aria-label="Workbook chapters">

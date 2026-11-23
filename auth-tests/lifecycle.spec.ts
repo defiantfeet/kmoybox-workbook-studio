@@ -5,6 +5,12 @@ const newPassword = 'Replacement-synthetic-password-3';
 const mail = new URL(process.env.STUDIO_AUTH_TEST_MAIL ?? 'http://127.0.0.1:54324');
 if (!['localhost', '127.0.0.1', '[::1]'].includes(mail.hostname)) throw new Error('Auth tests require local Mailpit.');
 
+const prefix = new URL(process.env.STUDIO_AUTH_TEST_URL ?? 'http://localhost:3000').pathname.replace(/\/$/, '');
+
+function route(path: string) {
+  return prefix + (prefix && path === '/' ? '' : path);
+}
+
 async function emailLink(request: APIRequestContext, address: string, part: string, appOrigin: string) {
   let url: string | undefined;
   await expect.poll(async () => {
@@ -36,10 +42,10 @@ async function signIn(page: Page, email: string, password: string) {
 
 test('confirmation, protected routes, profile, password recovery, and account deletion', async ({ page, request, browser }) => {
   const address = 'studio-' + crypto.randomUUID() + '@example.test';
-  await page.goto('/journal');
+  await page.goto(route('/journal'));
   await expect(page).toHaveURL(/\/login$/);
   const origin = new URL(page.url()).origin;
-  const exported = await request.get('/personal-data', { maxRedirects: 0 });
+  const exported = await request.get(route('/personal-data'), { maxRedirects: 0 });
   expect(exported.status()).toBe(307);
 
   await page.getByRole('button', { name: /create an account/i }).click();
@@ -48,25 +54,25 @@ test('confirmation, protected routes, profile, password recovery, and account de
   await page.getByLabel('Password', { exact: true }).fill(originalPassword);
   await page.getByRole('button', { name: 'Create your account' }).click();
   await expect(page.getByText(/Check your email for a confirmation link/)).toBeVisible();
-  const confirmation = await emailLink(request, address, '/auth/confirm', origin);
+  const confirmation = await emailLink(request, address, route('/auth/confirm'), origin);
   await page.reload();
   await signIn(page, address, originalPassword);
   await expect(page.getByRole('alert').filter({ hasText: 'Sign-in failed' })).toBeVisible();
   await page.goto(confirmation);
   await expect(page.getByRole('heading', { name: /Welcome back, Synthetic/ })).toBeVisible();
-  await page.goto('/account');
+  await page.goto(route('/account'));
   await page.getByLabel('Display name').fill('Renamed Learner');
   await page.getByRole('button', { name: 'Save profile' }).click();
   await expect(page.getByText('Profile updated.')).toBeVisible();
-  await page.goto('/');
+  await page.goto(route('/'));
   await expect(page.getByRole('heading', { name: /Welcome back, Renamed/ })).toBeVisible();
 
-  await page.goto('/reset-password');
+  await page.goto(route('/reset-password'));
   await expect(page).toHaveURL(/\/forgot-password\?expired=1$/);
   await page.getByLabel('Email address').fill(address);
   await page.getByRole('button', { name: 'Send reset link' }).click();
   await expect(page.getByRole('status')).toContainText('If an account exists');
-  const recovery = await emailLink(request, address, '/auth/recovery', origin);
+  const recovery = await emailLink(request, address, route('/auth/recovery'), origin);
   const separate = await browser.newContext();
   try {
     const reset = await separate.newPage();
@@ -85,16 +91,16 @@ test('confirmation, protected routes, profile, password recovery, and account de
     await separate.close();
   }
 
-  await page.goto('/login');
-  if (new URL(page.url()).pathname !== '/login') {
-    await page.goto('/account');
+  await page.goto(route('/login'));
+  if (new URL(page.url()).pathname !== route('/login')) {
+    await page.goto(route('/account'));
     await page.getByRole('button', { name: 'Sign out' }).click();
   }
   await signIn(page, address, originalPassword);
   await expect(page.getByRole('alert').filter({ hasText: 'Sign-in failed' })).toBeVisible();
   await signIn(page, address, newPassword);
-  await expect(page).toHaveURL('/');
-  await page.goto('/account');
+  await expect(page).toHaveURL(route('/'));
+  await page.goto(route('/account'));
   await page.getByText('Delete my account', { exact: true }).click();
   await page.getByLabel('Current password').fill(originalPassword);
   await page.getByLabel('Type DELETE MY ACCOUNT to confirm').fill('DELETE MY ACCOUNT');
@@ -106,6 +112,6 @@ test('confirmation, protected routes, profile, password recovery, and account de
   await expect(page.getByText('Your account was deleted.')).toBeVisible();
   await signIn(page, address, newPassword);
   await expect(page.getByRole('alert').filter({ hasText: 'Sign-in failed' })).toBeVisible();
-  await page.goto('/goals');
+  await page.goto(route('/goals'));
   await expect(page).toHaveURL(/\/login$/);
 });

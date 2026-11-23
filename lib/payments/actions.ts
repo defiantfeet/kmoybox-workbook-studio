@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { account } from '../data';
 import { demo } from '../session';
 import { accountAdmin } from '../auth/credentials';
-import { authOrigin } from '../auth/recovery';
+import { authURL } from '../auth/recovery';
 import type { ActionState } from '../actions';
 import { slugSchema } from '../workbooks/schema';
 import { testStripe, webhookSecret } from './stripe';
@@ -50,8 +50,8 @@ export async function startWorkbookCheckout(slug: string): Promise<ActionState> 
         client_reference_id: order.id,
         metadata,
         payment_intent_data: { metadata },
-        success_url: new URL('/purchases?checkout=complete', authOrigin()).href,
-        cancel_url: new URL('/workbooks/' + slug, authOrigin()).href,
+        success_url: authURL('/purchases?checkout=complete').href,
+        cancel_url: authURL('/workbooks/' + slug).href,
       }, { idempotencyKey: 'studio-workbook-' + order.id });
       if (session.livemode !== false || !session.id.startsWith('cs_test_')) return error('Test Checkout is unavailable.');
       const bound = await admin.rpc('bind_workbook_checkout', { purchase_id: order.id, session_id: session.id });

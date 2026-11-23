@@ -11,6 +11,7 @@ export async function supabase(writable = false) {
   const jar = await cookies();
   return createServerClient(url, key, {
     cookieOptions: authCookieOptions,
+    global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) },
     cookies: {
       getAll: () => jar.getAll(),
       setAll: values => {

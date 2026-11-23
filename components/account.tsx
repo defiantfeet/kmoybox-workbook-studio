@@ -1,3 +1,4 @@
+import { studioPath } from '../lib/studio-path';
 import Link from 'next/link';
 import { ArrowRight, LogOut } from 'lucide-react';
 import { StudioForm } from './forms';
@@ -30,7 +31,7 @@ export function Account({ displayName, email, sample, canEdit }: { displayName: 
     <section className="panel form-panel account-panel dashboard-section" aria-labelledby="personal-data-title">
       <h2 id="personal-data-title">Personal data</h2>
       <p>Export or delete your journal entries, mood check-ins, goals, milestone history, and workbook responses. Your sign-in and purchases stay active.</p>
-      <a className="secondary" href="/personal-data">Download personal data (JSON)</a>
+      <a className="secondary" href={studioPath('/personal-data')}>Download personal data (JSON)</a>
       <details className="edit">
         <summary>Delete personal activity</summary>
         <p className="muted">This permanently removes the saved activity listed above.</p>

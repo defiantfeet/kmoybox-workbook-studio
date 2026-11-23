@@ -2,6 +2,7 @@ import 'server-only';
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { cookies } from 'next/headers';
+import { studioPath } from '../studio-path';
 import { authCookieOptions } from './cookie-options';
 
 const cookie = 'studio-recovery';
@@ -9,6 +10,10 @@ const maxAge = 15 * 60;
 
 export function authOrigin() {
   return new URL(process.env.STUDIO_SITE_URL || 'http://localhost:3000').origin;
+}
+
+export function authURL(path: string) {
+  return new URL(studioPath(path), authOrigin());
 }
 
 function signature(value: string) {
@@ -27,7 +32,7 @@ export async function allowRecovery(userId: string, sessionId: string) {
   const digest = signature(payload);
   if (!digest) return false;
   (await cookies()).set(cookie, payload + '.' + digest, {
-    ...authCookieOptions, path: '/', maxAge,
+    ...authCookieOptions, maxAge,
   });
   return true;
 }
@@ -43,5 +48,5 @@ export async function recoveryAllowed(userId: string, sessionId: string) {
 }
 
 export async function clearRecovery() {
-  (await cookies()).delete(cookie);
+  (await cookies()).set(cookie, '', { ...authCookieOptions, maxAge: 0 });
 }

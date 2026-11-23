@@ -1,3 +1,4 @@
+import { studioPath } from '../lib/studio-path';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Check, Feather, ShoppingBag, Sparkles, Target } from 'lucide-react';
 import { updateWeeklyGoal } from '../lib/actions';
@@ -29,7 +30,7 @@ export function Dashboard({ name, data, now, completedModules }: { name: string;
   ];
 
   return <>
-    <header className="hero dashboard-hero">
+    <header className="hero dashboard-hero" style={{ backgroundImage: "url(" + studioPath('/studio-hero.webp') + ")" }}>
       <div className="hero-content">
         <h1>{name ? <>Welcome back,<br /><em>{name}.</em></> : <>Welcome to<br /><em>your studio.</em></>}</h1>
         <p>Take a breath. There’s room here for all of who you’re becoming.</p>

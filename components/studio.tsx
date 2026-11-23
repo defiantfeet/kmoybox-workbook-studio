@@ -1,3 +1,4 @@
+import { studioPath } from '../lib/studio-path';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, BookOpen, Feather, LayoutDashboard, LockKeyhole, Sparkles, Target, UserRound } from 'lucide-react';
@@ -51,7 +52,7 @@ const covers: Record<string, { image: string; tone: string }> = {
 export function WorkbookCover({ slug, compact = false }: { slug: string; compact?: boolean }) {
   const cover = Object.hasOwn(covers, slug) ? covers[slug] : undefined;
   return <div className={`cover ${compact ? 'cover-compact' : ''} ${cover?.tone ?? 'rose'}`}>
-    {cover ? <Image src={cover.image} alt="" fill sizes={compact ? '106px' : '(max-width: 480px) 85vw, 300px'} /> : <BookOpen size={28} aria-hidden />}
+    {cover ? <Image src={studioPath(cover.image)} alt="" fill sizes={compact ? '106px' : '(max-width: 480px) 85vw, 300px'} /> : <BookOpen size={28} aria-hidden />}
   </div>;
 }
 
@@ -65,7 +66,7 @@ export function ProductCard({ product, data, compact = false }: { product: Produ
     <div className="product-body">
       <Title>{product.title}</Title>{!compact && <p>{product.summary}</p>}
       {open ? <><Meter percent={stats.percent} label={product.title + ' completion'} />
-        <Link className="text-button" href={'/workbooks/' + product.slug} aria-label={action + ' ' + product.title}>{action}{!compact && ' workbook'} <ArrowRight size={15} aria-hidden /></Link></>
+        <Link className="text-button" href={'/workbooks/' + product.slug} aria-label={action + (!compact ? ' workbook: ' : ' ') + product.title}>{action}{!compact && ' workbook'} <ArrowRight size={15} aria-hidden /></Link></>
         : <span className="locked"><LockKeyhole size={15} aria-hidden /> Purchase required</span>}
     </div>
   </article>;

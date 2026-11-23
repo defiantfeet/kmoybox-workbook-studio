@@ -65,7 +65,14 @@ export async function studio(now = studioDay(new Date())) {
       .order('created_at', { ascending: false }).order('id').range(start, end)),
     client.from('profiles').select('display_name').eq('id', user.id).single(),
   ]);
-  if ([products, prompts, entitlements, answers, journal, goals, milestones, activity, profile].some(result => result.error)) {
+  const results = { products, prompts, entitlements, answers, journal, goals, milestones, activity, profile };
+  const failures = Object.entries(results).flatMap(([source, { error }]) => {
+    if (!error) return [];
+    const code = typeof error === 'object' && 'code' in error && typeof error.code === 'string' ? error.code : 'request_failed';
+    return [{ source, code }];
+  });
+  if (failures.length) {
+    console.error('Studio data request failed', failures);
     throw new Error('The studio could not load. Please try again.');
   }
   const data: StudioData = {

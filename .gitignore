@@ -17,3 +17,5 @@ supabase/.branches/
 .next-auth-test/
 
 test-results-auth/
+
+.next-staging/
