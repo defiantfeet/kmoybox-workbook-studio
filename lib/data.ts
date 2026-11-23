@@ -1,11 +1,12 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { demo, supabase } from './session';
-import { demoData } from './demo';
-import type { StudioData } from './model';
+import { sampleData } from './demo';
+import { studioDay, type StudioData } from './model';
 
-export async function demoSnapshot(): Promise<StudioData> {
+export async function demoSnapshot(now = studioDay(new Date())): Promise<StudioData> {
   const jar = await cookies();
+  const demoData = sampleData(now);
   function rows<T>(key: string, fallback: T[]): T[] {
     const stored = jar.get(key)?.value;
     if (!stored) return fallback;
@@ -32,8 +33,8 @@ export async function account(writable = false) {
   return { client, user };
 }
 
-export async function studio() {
-  if (demo) return { data: await demoSnapshot(), name: 'Alex' };
+export async function studio(now = studioDay(new Date())) {
+  if (demo) return { data: await demoSnapshot(now), name: 'Alex', displayName: 'Alex Morgan', email: 'alex@example.com' };
   const { client, user } = await account();
   const [products, prompts, entitlements, answers, journal, goals] = await Promise.all([
     client.from('products').select('slug,title,summary,free').order('free', { ascending: false }).order('slug'),
@@ -51,6 +52,6 @@ export async function studio() {
     purchased: entitlements.data?.map(row => row.product_slug) ?? [],
     answers: answers.data ?? [], journal: journal.data ?? [], goals: goals.data ?? [],
   };
-  const name = typeof user.user_metadata.display_name === 'string' ? user.user_metadata.display_name.trim().split(/\s+/)[0] : '';
-  return { data, name };
+  const displayName = typeof user.user_metadata.display_name === 'string' ? user.user_metadata.display_name.trim() : '';
+  return { data, name: displayName.split(/\s+/)[0], displayName, email: user.email };
 }

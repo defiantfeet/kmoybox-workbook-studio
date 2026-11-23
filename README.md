@@ -24,7 +24,7 @@ on conflict do nothing;
 
 The product library uses these entitlements. A checkout or external store integration is outside this development implementation. The workbooks in the seed catalog are sample editorial content.
 
-For a credential-free preview, run `STUDIO_DEMO=1 npm run dev`. The preview uses sample content and small, browser-scoped cookies. Use fictitious text in this mode.
+For a credential-free preview, run `STUDIO_DEMO=1 npm run dev`. Open http://localhost:3000 to explore the labeled sample dashboard. Sample workbook, journal, and goal edits use browser-scoped cookies. The daily prompt and weekly goal date range use Pacific time. Use fictitious text in this mode.
 
 ## Checks
 

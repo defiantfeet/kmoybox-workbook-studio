@@ -94,3 +94,13 @@ export async function save(kind: string, _: ActionState, form: FormData): Promis
   revalidatePath('/', 'layout');
   return { message: removing ? 'Removed.' : 'Saved.' };
 }
+
+export async function updateWeeklyGoal(state: ActionState, form: FormData) {
+  const [id, completed] = value(form, 'goal').split(':');
+  if (!id || (completed !== 'true' && completed !== 'false')) return failure('Choose a goal.');
+  const update = new FormData();
+  update.set('id', id);
+  update.set('completed', completed);
+  update.set('intent', 'toggle');
+  return save('goal', state, update);
+}

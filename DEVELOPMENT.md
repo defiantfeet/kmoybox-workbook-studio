@@ -29,6 +29,7 @@ Owned records use Supabase Auth user IDs. RLS restricts private rows to the sign
 | /workbooks/[slug] | Guided prompts and completion |
 | /journal | View, write and manage entries |
 | /goals | Set and manage goals |
+| /account | Signed-in profile, purchased library, and sign-out |
 | /progress | Workbook and goal completion |
 | /library | Purchased products |
 | /login | Email and password authentication |

@@ -26,7 +26,7 @@ export function Workbook({ data, slug }: { data: StudioData; slug: string }) {
     <div className="panel progress-row"><p>{stats.done} of {stats.total} exercises completed</p><Meter percent={stats.percent} label="Workbook completion" /></div>
     <div className="stack">{exercises.map(prompt => {
       const answer = data.answers.find(item => item.prompt_id === prompt.id);
-      return <section key={prompt.id} className="panel form-panel">
+      return <section key={prompt.id} id={'exercise-' + prompt.id} className="panel form-panel">
         <p className="eyebrow">EXERCISE {prompt.position}{answer?.completed ? ' · COMPLETED' : ''}</p>
         <h2>{prompt.title}</h2>
         <StudioForm action={save.bind(null, 'workbook')} className="stack">
@@ -39,11 +39,12 @@ export function Workbook({ data, slug }: { data: StudioData; slug: string }) {
   </>;
 }
 
-export function Journal({ data }: { data: StudioData }) {
+export function Journal({ data, reflection }: { data: StudioData; reflection?: string }) {
   return <>
     <Heading title="Your journal" subtitle="A private place to put your thoughts into words." />
     <section id="new-entry" className="panel form-panel">
       <h2>New entry</h2>
+      {reflection && <p className="journal-prompt">{reflection}</p>}
       <StudioForm action={save.bind(null, 'journal')} className="stack">
         <label>Title<input name="title" required maxLength={140} /></label>
         <label>What’s on your mind?<textarea name="body" rows={5} required maxLength={10000} /></label>
