@@ -32,7 +32,7 @@ test('journal and goals can be created, edited, completed, and removed', async (
   await page.getByText('A new reflection', { exact: true }).click();
   await page.getByRole('textbox', { name: 'Entry', exact: true }).fill('I made a small but meaningful change.');
   await page.getByRole('button', { name: 'Update entry' }).click();
-  await expect(page.getByRole('status')).toHaveText('Saved.');
+  await expect(page.locator('details').filter({ hasText: 'A new reflection' }).getByRole('status')).toHaveText('Saved.');
   await page.reload();
   await page.getByText('A new reflection', { exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Entry', exact: true })).toHaveValue('I made a small but meaningful change.');
