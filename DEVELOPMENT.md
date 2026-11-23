@@ -43,3 +43,25 @@ Owned records use Supabase Auth user IDs. RLS restricts private rows to the sign
 - Local development works from documented commands with example configuration and seeded content.
 - An explicitly enabled development preview uses sample data. The project has no production deployment or production website integration.
 - Automated tests cover progress, core browser flows, and database isolation.
+
+## Interactive workbook engine
+
+1. Define and validate a versioned content format for chapter and module titles, ordered lesson and exercise blocks, and stable exercise IDs. Add original sample content for The Dancer Mindset.
+2. Add a learner route for structured workbooks, module-level draft responses, completion validation, resume links, and private PDF downloads. Continue serving legacy workbooks at their existing URLs.
+3. Add an editor route with workbook creation and form-based module authoring, draft preview, and independent module publishing. Require an explicit Supabase editor grant outside development preview.
+4. Verify response saving and resuming, completion, PDF downloads, and draft-to-published behavior in browser tests. Check row-level privileges for learners and editors.
+
+| Route | Purpose |
+| --- | --- |
+| /workbooks/[slug] | Chapter outline and resumable module reader |
+| /workbook-pdf/[slug] | Private PDF download |
+| /content-editor | Workbook and draft-module authoring |
+
+| Table | Purpose |
+| --- | --- |
+| workbook_editor_accounts | Server-managed editor grants |
+| engine_workbooks | Workbook metadata |
+| engine_modules | Editable module content plus current publication snapshot |
+| engine_progress | Per-account, per-module responses with completion tied to the published revision |
+
+Acceptance requires all exercise types to render from structured content, partial answers to survive reload, completion to require all valid answers, draft content to remain private, and member reports to contain only their own saved responses.

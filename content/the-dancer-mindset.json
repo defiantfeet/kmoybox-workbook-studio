@@ -1,0 +1,57 @@
+{
+  "workbook": {
+    "slug": "the-dancer-mindset",
+    "title": "The Dancer Mindset",
+    "summary": "An original demonstration workbook about showing up, finding your footing, and practicing with intention."
+  },
+  "modules": [
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "content": {
+        "format": 1,
+        "title": "Find your starting position",
+        "chapter": "Arriving at practice",
+        "chapterOrder": 1,
+        "order": 1,
+        "blocks": [
+          { "id": "20000000-0000-4000-8000-000000000001", "kind": "lesson", "body": "Before the music begins, notice where you are today. Your starting position can change from one practice to the next. Take a moment to name what you have available: energy, curiosity, a little time, or simply the willingness to begin.\n\nPick one small thing to pay attention to as you move. It could be your breath, the shift of weight in your feet, or the moment you notice yourself rushing." },
+          { "id": "20000000-0000-4000-8000-000000000002", "kind": "reflection", "prompt": "What do you notice about how you’re arriving at practice today?" },
+          { "id": "20000000-0000-4000-8000-000000000003", "kind": "choice", "prompt": "Which cue would help you begin?", "options": [
+            { "id": "30000000-0000-4000-8000-000000000001", "label": "Exhale before the first count" },
+            { "id": "30000000-0000-4000-8000-000000000002", "label": "Feel where my feet meet the floor" },
+            { "id": "30000000-0000-4000-8000-000000000003", "label": "Listen for the rhythm before moving" }
+          ] },
+          { "id": "20000000-0000-4000-8000-000000000004", "kind": "rating", "prompt": "How ready do you feel to start a short practice?", "max": 5, "low": "Need more time", "high": "Ready to begin" }
+        ]
+      }
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000002",
+      "content": {
+        "format": 1,
+        "title": "Make room for a second try",
+        "chapter": "Arriving at practice",
+        "chapterOrder": 1,
+        "order": 2,
+        "blocks": [
+          { "id": "20000000-0000-4000-8000-000000000005", "kind": "lesson", "body": "Think of a phrase you lost halfway through. On a second try, give yourself one specific experiment: slow the transition, mark the steps, or return to the last count you remember. When you finish, write down what changed." },
+          { "id": "20000000-0000-4000-8000-000000000006", "kind": "reflection", "prompt": "Which part of a recent practice would you revisit, and what would you try differently?" }
+        ]
+      }
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000003",
+      "content": {
+        "format": 1,
+        "title": "Plan one repeatable practice",
+        "chapter": "Build a rhythm",
+        "chapterOrder": 2,
+        "order": 1,
+        "blocks": [
+          { "id": "20000000-0000-4000-8000-000000000007", "kind": "lesson", "body": "Choose a practice you could repeat on an ordinary day. Five minutes with a familiar track is enough to start. Decide when and where you’ll do it, and make the first step small enough to take even if your day changes." },
+          { "id": "20000000-0000-4000-8000-000000000008", "kind": "goal", "prompt": "What practice will you repeat, and what’s the first step you’ll take?" }
+        ]
+      }
+    }
+  ]
+}

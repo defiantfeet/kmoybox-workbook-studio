@@ -23,7 +23,7 @@ export function Shell({ current, name, sample, children }: { current: string; na
       <div className="side-bottom"><p>Keep Me Out<br />of Your Box.</p><span>A SPACE OF YOUR OWN</span></div>
     </aside>
     <div className="workspace">
-      <header className="topbar"><span>{pages.find(page => page.key === current)?.title ?? (current === 'progress' ? 'Progress' : 'My Library')}</span>
+      <header className="topbar"><span>{pages.find(page => page.key === current)?.title ?? (current === 'progress' ? 'Progress' : current === 'content-editor' ? 'Content Editor' : 'My Library')}</span>
         <div className="account">{sample && <small>Sample content</small>}<Link href="/account" className="avatar" aria-label="Open account">{name[0]?.toUpperCase() || 'K'}</Link></div>
       </header>
       <main id="main" tabIndex={-1} className="content">{children}</main>

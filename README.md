@@ -37,3 +37,19 @@ npm run test:db
 ```
 
 Browser tests start an isolated sample server. Database tests run on the local Supabase stack and check privacy and product access with two users. The [development plan](DEVELOPMENT.md) records schema, routes, and acceptance criteria.
+
+## Author interactive workbooks
+
+Open **Workbooks** and choose **The Dancer Mindset** for the original demonstration. The reader resumes the latest unfinished module with saved responses, or opens the first unfinished module. Saving responses can leave exercises blank. Completing a module requires answers to every exercise. **Download my responses (PDF)** exports the signed-in reader’s saved answers and module status.
+
+From **Account → Workbook content editor**, create a workbook, choose **New module**, enter a chapter and its order, and add lesson and exercise blocks using the form. Blocks can be reordered, and multiple-choice options can be added or removed. **Preview module** renders the current form. **Save draft** keeps changes in the editor. **Publish saved draft** makes that module visible to signed-in learners independently of its other modules. Publishing a revision preserves responses with matching exercise IDs. Readers review the revised module and complete it again.
+
+The demo editor is enabled by `STUDIO_DEMO=1` and uses browser-isolated, local SQLite data. In an authenticated local Supabase workspace, apply the migrations and grant an existing account editor access from a trusted SQL session.
+
+```sql
+insert into public.workbook_editor_accounts (user_id)
+select id from auth.users where email = 'your-local-test-email@example.com'
+on conflict do nothing;
+```
+
+The [demo content file](content/the-dancer-mindset.json) documents format version 1. Workbook metadata contains a title, description, and URL slug. Each module has a chapter title, chapter order, module order, and ordered blocks with stable UUIDs. Each block has a type and the corresponding lesson, prompt, choices, or range labels. Reuse a chapter title and its order to group modules together. The editor generates and retains the IDs automatically, so adding a workbook requires no source changes.

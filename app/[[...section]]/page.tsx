@@ -4,13 +4,16 @@ import { Goals, Journal, Progress, Workbook, Workbooks } from '../../components/
 import { pages, Shell } from '../../components/studio';
 import { Dashboard } from '../../components/dashboard';
 import { Account } from '../../components/account';
+import { ContentEditor } from '../../components/content-editor';
+import { WorkbookEngine } from '../../components/workbook-engine';
+import { canEditWorkbooks, publishedWorkbook, workbookLibrary } from '../../lib/workbooks/repository';
 import { dailyReflection, studioDay } from '../../lib/model';
 import { studio } from '../../lib/data';
 import { demo, supabase } from '../../lib/session';
 
 export default async function Page({ params, searchParams }: {
   params: Promise<{ section?: string[] }>;
-  searchParams: Promise<{ confirmation?: string; reflection?: string }>;
+  searchParams: Promise<{ confirmation?: string; reflection?: string; workbook?: string; module?: string; saved?: string }>;
 }) {
   const { section = [] } = await params;
   const [current = 'dashboard', slug] = section;
@@ -23,16 +26,22 @@ export default async function Page({ params, searchParams }: {
     }
     return <Login configured={!!client} failed={(await searchParams).confirmation === 'failed'} />;
   }
-  if (![...pages.map(page => page.key), 'progress', 'library'].includes(current) || (current === 'dashboard' && section.length)
+  if (![...pages.map(page => page.key), 'progress', 'library', 'content-editor'].includes(current) || (current === 'dashboard' && section.length)
     || section.length > (current === 'workbooks' ? 2 : 1)) notFound();
   const now = studioDay(new Date());
   const { data, name, displayName, email } = await studio(now);
+  const query = await searchParams;
+  const engineBook = current === 'workbooks' && slug && !data.products.some(product => product.slug === slug)
+    ? await publishedWorkbook(slug) : null;
+  const engineLibrary = current === 'workbooks' && !slug ? await workbookLibrary() : [];
   return <Shell current={current} name={name} sample={demo}>
     {current === 'dashboard' && <Dashboard name={name} data={data} now={now} />}
-    {current === 'workbooks' && (slug ? <Workbook slug={slug} data={data} /> : <Workbooks data={data} />)}
-    {current === 'journal' && <Journal data={data} reflection={(await searchParams).reflection === 'today' ? dailyReflection(now) : undefined} />}
+    {current === 'workbooks' && (engineBook ? <WorkbookEngine workbook={engineBook} selected={query.module} />
+      : slug ? <Workbook slug={slug} data={data} /> : <Workbooks data={data} engineLibrary={engineLibrary} />)}
+    {current === 'journal' && <Journal data={data} reflection={query.reflection === 'today' ? dailyReflection(now) : undefined} />}
     {current === 'goals' && <Goals data={data} />}
-    {current === 'account' && <Account displayName={displayName} email={email} sample={demo} />}
+    {current === 'account' && <Account displayName={displayName} email={email} sample={demo} canEdit={await canEditWorkbooks()} />}
+    {current === 'content-editor' && <ContentEditor query={query} />}
     {current === 'progress' && <Progress data={data} />}
     {current === 'library' && <Workbooks data={data} library />}
   </Shell>;

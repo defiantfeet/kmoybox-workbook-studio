@@ -3,15 +3,24 @@ import { ArrowLeft } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { save } from '../lib/actions';
 import { progress, type StudioData } from '../lib/model';
+import type { WorkbookRecord } from '../lib/workbooks/schema';
 import { StudioForm } from './forms';
 import { Heading, Meter, ProductCard } from './studio';
 
-export function Workbooks({ data, library = false }: { data: StudioData; library?: boolean }) {
+export function Workbooks({ data, library = false, engineLibrary = [] }: { data: StudioData; library?: boolean; engineLibrary?: WorkbookRecord[] }) {
   const products = library ? data.products.filter(product => data.purchased.includes(product.slug)) : data.products;
   return <>
     <Heading title={library ? 'My Library' : 'Workbooks'} subtitle={library ? 'Revisit the digital products you own.' : 'Guided exercises for the things you’re working through.'} />
+    {engineLibrary.length > 0 && <section aria-label="Interactive workbooks" className="product-grid engine-library">
+      {engineLibrary.map(book => <article key={book.slug} className="panel form-panel">
+        {book.sample && <p className="eyebrow">Demonstration workbook</p>}
+        <h2>{book.title}</h2>
+        <p>{book.summary}</p>
+        <Link className="text-button" href={'/workbooks/' + book.slug}>Open {book.title}</Link>
+      </article>)}
+    </section>}
     {products.length ? <div className="product-grid">{products.map(product => <ProductCard key={product.slug} product={product} data={data} />)}</div>
-      : <p className="panel empty">{library ? 'Purchased products will appear here.' : 'Workbooks will appear here when available.'} <Link href="/workbooks">Browse workbooks</Link></p>}
+      : !engineLibrary.length && <p className="panel empty">{library ? 'Purchased products will appear here.' : 'Workbooks will appear here when available.'} <Link href="/workbooks">Browse workbooks</Link></p>}
   </>;
 }
 
