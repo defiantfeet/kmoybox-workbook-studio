@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { account } from '../data';
 import { demo } from '../session';
 import { readDemoWorkbooks } from './demo-store';
-import { ordered, type ModuleContent, type ModuleProgress, type ModuleRecord, type WorkbookRecord } from './schema';
+import { ordered, type ModuleContent, type ModuleProgress, type ModuleRecord, type WorkbookOffer, type WorkbookRecord } from './schema';
 
 export async function editorAccess() {
   const session = await account();
@@ -12,15 +12,16 @@ export async function editorAccess() {
   return session;
 }
 
-export async function workbookLibrary() {
+export async function workbookLibrary(): Promise<WorkbookOffer[]> {
   if (demo) {
     const { books, modules } = await readDemoWorkbooks();
-    return books.filter(book => modules.some(item => item.workbook_slug === book.slug && item.published));
+    return books.filter(book => modules.some(item => item.workbook_slug === book.slug && item.published))
+      .map(book => ({ ...book, requires_purchase: false, unlocked: true, owned: false, amount: null, currency: null }));
   }
   const { client } = await account();
-  const { data, error } = await client.from('engine_workbooks').select('slug,title,summary,sample,engine_modules!inner(id)').order('title');
+  const { data, error } = await client.rpc('workbook_storefront');
   if (error) throw new Error('The workbook library could not load.');
-  return (data ?? []) as WorkbookRecord[];
+  return (data ?? []) as WorkbookOffer[];
 }
 
 export async function publishedWorkbook(slug: string) {
@@ -35,6 +36,9 @@ export async function publishedWorkbook(slug: string) {
     responses = state.progress;
   } else {
     const { client, user } = await account();
+    const access = await client.rpc('engine_can_read_workbook', { book_slug: slug });
+    if (access.error) throw new Error('Workbook access could not be checked.');
+    if (access.data !== true) return null;
     const { data, error } = await client.from('engine_workbooks')
       .select('slug,title,summary,sample,engine_modules(id,content,revision)').eq('slug', slug).maybeSingle();
     if (error) throw new Error('The workbook could not load.');

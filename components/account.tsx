@@ -22,6 +22,7 @@ export function Account({ displayName, email, sample, canEdit }: { displayName: 
       </StudioForm>}
       <div className="actions edit">
         <Link className="primary" href="/library">My Library <ArrowRight size={15} aria-hidden /></Link>
+        <Link className="secondary" href="/purchases">Purchase history</Link>
         {canEdit && <Link className="secondary" href="/content-editor">Workbook content editor</Link>}
         {!sample && <form action={signOut}><button className="secondary"><LogOut size={16} aria-hidden /> Sign out</button></form>}
       </div>

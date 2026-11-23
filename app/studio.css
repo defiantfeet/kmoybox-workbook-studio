@@ -212,3 +212,5 @@ fieldset.exercise-options { display: grid; gap: 10px; }
 .goal-history li { padding: 8px 0; border-bottom: 1px solid var(--line); }
 .goal-history time { color: var(--muted); font-size: .85rem; }
 .dashboard-milestones { padding: 11px 15px; margin-bottom: 12px; }
+
+.workbook-price { font-weight: 700; color: var(--color-navy); }

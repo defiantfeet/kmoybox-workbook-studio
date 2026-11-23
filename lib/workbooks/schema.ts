@@ -37,6 +37,9 @@ export type Block = z.infer<typeof block>;
 export type Exercise = Exclude<Block, { kind: 'lesson' }>;
 export type WorkbookMetadata = z.infer<typeof workbookSchema>;
 export type WorkbookRecord = WorkbookMetadata & { sample: boolean };
+export type WorkbookOffer = WorkbookRecord & {
+  requires_purchase: boolean; unlocked: boolean; owned: boolean; amount: number | null; currency: string | null;
+};
 export type ModuleRecord = {
   id: string; workbook_slug: string; draft?: ModuleContent; published: ModuleContent | null; revision: number; edit_version?: number;
 };

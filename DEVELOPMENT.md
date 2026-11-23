@@ -79,3 +79,10 @@ Acceptance requires all exercise types to render from structured content, partia
 2. Add email-based password recovery and password-confirmed account deletion. Bind recovery to the verified Supabase session and keep the deletion client server-only.
 3. Verify cross-account access for profiles, purchases, journals, goals, and progress with synthetic identities. Exercise confirmation, login, recovery, and deletion through Supabase Auth when the local services are available.
 4. Document configuration, migrations, backup and restore testing, and the treatment of deleted accounts in retained backups.
+
+## Stripe test Checkout
+
+1. Add a server-managed USD price catalog and an owner-readable purchase ledger for published interactive workbooks.
+2. Create hosted Checkout sessions from authenticated requests using server-selected prices. Confirm payments and refunds independently through signed Stripe webhooks.
+3. Gate module content and writes at the database. Add storefront prices, locked cards, purchase history, and library access.
+4. Test webhook signatures, duplicate and out-of-order deliveries, checkout concurrency, purchase isolation, and refunds with synthetic fixtures.

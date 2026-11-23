@@ -12,7 +12,7 @@ supabase start
 cp .env.example .env.local
 ```
 
-Copy the local publishable or legacy `anon` key from `supabase status` into `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and check that the API URL matches. Set `STUDIO_SITE_URL` to the app origin. Generate `STUDIO_AUTH_SECRET` with `openssl rand -hex 32` and copy the local secret or legacy `service_role` key into `SUPABASE_SECRET_KEY`. Keep `.env.local` outside Git. The secret key is read only by the server-side account deletion client.
+Copy the local publishable or legacy `anon` key from `supabase status` into `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and check that the API URL matches. Set `STUDIO_SITE_URL` to the app origin. Generate `STUDIO_AUTH_SECRET` with `openssl rand -hex 32` and copy the local secret or legacy `service_role` key into `SUPABASE_SECRET_KEY`. Keep `.env.local` outside Git. The secret key is used only by server-side account deletion and Stripe purchase processing.
 
 Run `npm run dev` and open http://localhost:3000. Register with an email and password and open the email confirmation link in the local email inbox reported by Supabase, usually http://127.0.0.1:54324. The starter workbook is available after sign-in. To test a purchase, use the local SQL editor or a trusted database session to grant a catalog item to your local user.
 
@@ -79,3 +79,30 @@ Run `npm run test:db` against a disposable local Supabase stack for authorizatio
 - Protect backups as private journal data. Encrypt any exported copies, limit operator access, and record expiry and deletion handling. A backup taken before account deletion can still contain the deleted account until that backup expires.
 - Test restores into an isolated project before launch and periodically afterward. Verify Auth identities, purchases, migrations, RLS, and a synthetic sign-in before a restored environment serves users. Reapply any account deletions that occurred after the backup point before reopening access.
 - Back up any future Supabase Storage file objects separately. Database backups cover storage metadata. [Supabase backup scope](https://supabase.com/docs/guides/platform/backups)
+
+## Stripe test Checkout
+
+Checkout is available for structured interactive workbooks with a server-managed USD price. Free workbooks and legacy purchase entitlements keep their existing access rules. This integration accepts only Stripe test keys and test-mode events. It uses Stripe-hosted Checkout for card entry.
+
+1. Apply the Checkout migration to your local Supabase database. Keep `SUPABASE_SECRET_KEY`, `STRIPE_TEST_SECRET_KEY`, and `STRIPE_TEST_WEBHOOK_SECRET` in the server environment, outside Git.
+2. In Stripe test mode, create a one-time USD Price. Set its exact ID and amount in cents while the workbook is still a draft. Then publish the workbook. The values below are placeholders for a synthetic test offer.
+
+   ```sql
+   begin;
+   update public.engine_workbooks set requires_purchase = true where slug = 'your-test-workbook';
+   insert into public.workbook_prices (workbook_slug, stripe_price_id, amount, currency)
+   values ('your-test-workbook', 'price_ReplaceWithTestPriceId', 1200, 'usd');
+   commit;
+   ```
+
+3. Run the Stripe CLI in test mode and copy the signing secret that it reports to `STRIPE_TEST_WEBHOOK_SECRET`. Restart the app after setting the environment.
+
+   ```sh
+   stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,charge.refunded,refund.created,refund.updated --forward-to http://localhost:3000/stripe/webhook
+   ```
+
+4. Sign in with a synthetic account, open the priced workbook, and use a [Stripe test card](https://docs.stripe.com/testing). Check **Account → Purchase history** for payment status and **My Library** for the workbook. Use another synthetic account to verify that its module and PDF remain locked.
+
+Issue test refunds from the Stripe Dashboard. The webhook records successful partial refunds and preserves access. A full successful refund removes access. An authorized database operator can set a paid purchase’s status to `revoked` and update `updated_at` to block access and repurchase. For a pending order, expire its Checkout session before manually revoking access. Set a price’s `active` flag to false to pause sales without making the workbook free. Expire open sessions before changing a price. A Checkout that returns before webhook delivery stays pending, and the customer can refresh purchase history.
+
+Run `npm test` for signature and payment-event fixtures and `npm run test:db` for purchase isolation, payment idempotency, refunds, and revocation.
