@@ -24,6 +24,14 @@ The Studio has a local staging deployment built with production settings and mou
 3. Point `studio-staging.kmoybox.com` at the staging service with the host-provided CNAME or supported DNS target. Verify TLS before testing. Set Supabase’s site URL to `https://studio-staging.kmoybox.com/studio`, add the exact `/studio/auth/confirm` and `/studio/auth/recovery` callback URLs, and install the repository’s mail templates. Forward Stripe test events to `https://studio-staging.kmoybox.com/studio/stripe/webhook`.
 4. Restrict human access to staging through the host. If that protection blocks Stripe deliveries, exempt only the webhook path. The application still verifies signatures on that path. Repeat the checks below with a synthetic buyer and a second synthetic account.
 
+### Private Vercel preview for review
+
+This setup is ready for provisioning once the repository connection and deployment are approved.
+
+1. Import `defiantfeet/kmoybox-workbook-studio` as a separate Vercel project and deploy a Preview build from `development` using the Next.js preset and Node.js 24. Use the Vercel hostname and enable Deployment Protection for the reviewers. Keep the existing Wix and DNS configuration out of this project.
+2. Set the Preview environment variables from `.env.example` using an isolated Supabase project. Leave `NEXT_PUBLIC_STUDIO_BASE_PATH` empty for the review URL. Set `STUDIO_SITE_URL` to the exact HTTPS origin of the stable Preview branch alias, then add that origin and its `/auth/confirm` and `/auth/recovery` URLs to Supabase Auth. Apply the migrations and seed synthetic sample content. Use a dedicated synthetic reviewer account and share credentials privately. Leave demo mode and Stripe unset.
+3. Open the Preview alias as a reviewer, sign into Studio, and verify navigation, workbook completion and PDF download, journal autosave, goal milestones, and a protected deep link. Check PDF generation on the deployed runtime so the bundled font is verified. Share the protected Preview alias after the checks pass. Keep the previous verified deployment available and restore its alias if a new preview fails.
+
 ## Connecting kmoybox.com/studio
 
 DNS maps hostnames to services. The path split needs an HTTP router.

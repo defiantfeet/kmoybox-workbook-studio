@@ -24,7 +24,9 @@ on conflict do nothing;
 
 The product library uses these entitlements. Stripe Checkout is available in test mode when configured. The workbooks in the seed catalog are sample editorial content.
 
-For a credential-free preview, run `STUDIO_DEMO=1 npm run dev`. Open http://localhost:3000 to explore the labeled sample dashboard. Sample workbook, journal, and goal edits use a browser-scoped local demo session. The daily prompt and weekly goal date range use Pacific time. Use fictitious text in this mode.
+For a credential-free preview, run `STUDIO_DEMO=1 npm run dev` and open http://localhost:3000 in the browser on the same machine. In Codex Cloud, open **New tab (+) → Desktop** in the right panel and use the shared Chrome window. Cloud localhost is reachable from the cloud desktop. A separate browser needs a forwarded port or an approved hosted staging URL.
+
+Confirm that the dashboard says **Sample content**. Go to **Workbooks → Open The Dancer Mindset** to try the interactive exercises, **Journal** to save a sample reflection, and **Goals** to add a goal or complete a milestone. Sample edits are scoped to the browser’s local demo session. Use fictitious text. The daily prompt and weekly goals use Pacific time.
 
 ## Checks
 
