@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react';
 import { saveModuleDraft } from '../lib/workbooks/actions';
 import { moduleSchema, type Block, type ModuleContent } from '../lib/workbooks/schema';
@@ -28,6 +28,8 @@ export function ModuleEditor({ slug, id, version, initial }: {
   slug: string; id: string | null; version: number; initial: ModuleContent;
 }) {
   const [content, setContent] = useState(initial);
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const [kind, setKind] = useState<Block['kind']>('lesson');
   const [preview, setPreview] = useState<ModuleContent | null>(null);
   const [previewError, setPreviewError] = useState('');
@@ -63,7 +65,7 @@ export function ModuleEditor({ slug, id, version, initial }: {
 
   return <>
     <form action={submit} className="stack">
-      <fieldset disabled={pending}>
+      <fieldset disabled={pending || !ready}>
         <div className="editor-fields">
           <label>Module title<input required maxLength={120} value={content.title} onChange={event => patch('title', event.target.value)} /></label>
           <label>Chapter title<input required maxLength={120} list="workbook-chapters" value={content.chapter} onChange={event => patch('chapter', event.target.value)} /></label>
