@@ -50,7 +50,7 @@ async function readPages<T>(read: (start: number, end: number) => PromiseLike<{ 
 export async function studio(now = studioDay(new Date())) {
   if (demo) return { data: await demoSnapshot(now), name: 'Alex', displayName: 'Alex Morgan', email: 'alex@example.com' };
   const { client, user } = await account();
-  const [products, prompts, entitlements, answers, journal, goals, milestones, activity] = await Promise.all([
+  const [products, prompts, entitlements, answers, journal, goals, milestones, activity, profile] = await Promise.all([
     client.from('products').select('slug,title,summary,free').order('free', { ascending: false }).order('slug'),
     client.from('prompts').select('id,product_slug,position,title,question').order('position'),
     client.from('entitlements').select('product_slug'),
@@ -63,8 +63,9 @@ export async function studio(now = studioDay(new Date())) {
       .order('created_at').order('id').range(start, end)),
     readPages((start, end) => client.from('goal_activity').select('id,goal_id,kind,title,created_at')
       .order('created_at', { ascending: false }).order('id').range(start, end)),
+    client.from('profiles').select('display_name').eq('id', user.id).single(),
   ]);
-  if ([products, prompts, entitlements, answers, journal, goals, milestones, activity].some(result => result.error)) {
+  if ([products, prompts, entitlements, answers, journal, goals, milestones, activity, profile].some(result => result.error)) {
     throw new Error('The studio could not load. Please try again.');
   }
   const data: StudioData = {
@@ -72,6 +73,6 @@ export async function studio(now = studioDay(new Date())) {
     purchased: entitlements.data?.map(row => row.product_slug) ?? [],
     answers: answers.data ?? [], journal: journal.data ?? [], goals: goals.data ?? [], milestones: milestones.data ?? [], activity: activity.data ?? [],
   };
-  const displayName = typeof user.user_metadata.display_name === 'string' ? user.user_metadata.display_name.trim() : '';
+  const displayName = profile.data?.display_name ?? '';
   return { data, name: displayName.split(/\s+/)[0], displayName, email: user.email };
 }

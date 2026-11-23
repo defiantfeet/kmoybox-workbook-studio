@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { ArrowRight, LogOut } from 'lucide-react';
 import { StudioForm } from './forms';
 import { deletePersonalActivity } from '../lib/personal/actions';
-import { signOut } from '../lib/actions';
+import { deleteAccount, signOut, updateProfile } from '../lib/auth/actions';
+import { deletionConfigured } from '../lib/auth/credentials';
 import { Heading } from './studio';
 
 export function Account({ displayName, email, sample, canEdit }: { displayName: string; email?: string; sample: boolean; canEdit: boolean }) {
@@ -15,7 +16,11 @@ export function Account({ displayName, email, sample, canEdit }: { displayName: 
         <div><dt>Name</dt><dd>{displayName || '—'}</dd></div>
         <div><dt>Email</dt><dd>{email || '—'}</dd></div>
       </dl>
-      <div className="actions">
+      {!sample && <StudioForm action={updateProfile} className="stack edit">
+        <label>Display name<input key={displayName} name="display_name" defaultValue={displayName} maxLength={80} required autoComplete="name" /></label>
+        <button className="primary">Save profile</button>
+      </StudioForm>}
+      <div className="actions edit">
         <Link className="primary" href="/library">My Library <ArrowRight size={15} aria-hidden /></Link>
         {canEdit && <Link className="secondary" href="/content-editor">Workbook content editor</Link>}
         {!sample && <form action={signOut}><button className="secondary"><LogOut size={16} aria-hidden /> Sign out</button></form>}
@@ -34,5 +39,17 @@ export function Account({ displayName, email, sample, canEdit }: { displayName: 
         </StudioForm>
       </details>
     </section>
+    {!sample && <section className="panel form-panel account-panel dashboard-section" aria-labelledby="delete-account-title">
+      <h2 id="delete-account-title">Delete account</h2>
+      <p>This permanently removes your sign-in, profile, purchases recorded in Studio, and saved personal activity.</p>
+      {deletionConfigured() ? <details className="edit">
+        <summary>Delete my account</summary>
+        <StudioForm action={deleteAccount} className="stack edit">
+          <label>Current password<input name="password" type="password" autoComplete="current-password" required /></label>
+          <label>Type DELETE MY ACCOUNT to confirm<input name="confirmation" pattern="DELETE MY ACCOUNT" autoComplete="off" required /></label>
+          <button className="secondary">Permanently delete my account</button>
+        </StudioForm>
+      </details> : <p className="muted">Account deletion requires the workspace’s server credentials.</p>}
+    </section>}
   </>;
 }

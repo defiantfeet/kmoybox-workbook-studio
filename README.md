@@ -12,7 +12,7 @@ supabase start
 cp .env.example .env.local
 ```
 
-Copy the local publishable key from `supabase status` into `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and check that the API URL matches. Keep `.env.local` outside Git. The app uses only the publishable key and the signed-in user's session.
+Copy the local publishable or legacy `anon` key from `supabase status` into `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and check that the API URL matches. Set `STUDIO_SITE_URL` to the app origin. Generate `STUDIO_AUTH_SECRET` with `openssl rand -hex 32` and copy the local secret or legacy `service_role` key into `SUPABASE_SECRET_KEY`. Keep `.env.local` outside Git. The secret key is read only by the server-side account deletion client.
 
 Run `npm run dev` and open http://localhost:3000. Register with an email and password and open the email confirmation link in the local email inbox reported by Supabase, usually http://127.0.0.1:54324. The starter workbook is available after sign-in. To test a purchase, use the local SQL editor or a trusted database session to grant a catalog item to your local user.
 
@@ -61,3 +61,21 @@ Journal changes save after a short pause or when you leave the editor. You can a
 Goal completion and milestone completion are tracked separately. Each goal displays its milestone progress and dated activity, and the dashboard shows totals from saved records.
 
 In **Account → Personal data**, download your journal entries, goals, milestones, goal history, and workbook responses as JSON, or permanently delete that activity by typing `DELETE` and submitting the confirmation. The reset preserves sign-in and purchases. Demo activity is isolated by browser session in the local SQLite store.
+
+
+## Authentication and authorization
+
+Supabase Auth owns identities and credentials in `auth.users`. The profile migration creates and backfills `public.profiles` with owner-only read and display-name update policies. The legacy catalog uses `products` and `prompts`, and the structured catalog uses `engine_workbooks` and `engine_modules`. Purchases use `entitlements`. Journals, goals, milestones, and workbook progress have owner policies. The editor allowlist governs publishing separately. The app verifies the user session before loading private routes or processing account actions.
+
+Local Supabase is configured for email confirmation and a minimum password length of 12. In a hosted workspace, configure the HTTPS site URL, exact callback allowlist, transactional SMTP, email confirmation, and the same password minimum. Use the supplied [confirmation](supabase/confirmation.html) and [recovery](supabase/recovery.html) templates, which deliver token hashes to the Studio callbacks. Reuse one strong `STUDIO_AUTH_SECRET` across app instances. A reset grant expires after 15 minutes and is bound to the verified Supabase session. A password change revokes active refresh sessions.
+
+From **Account**, a signed-in user can change their display name. Full account deletion requires the current password and the exact confirmation phrase. It deletes the Supabase identity and cascades to its owner-linked Studio records, including its profile, purchase entitlements, private activity, and editor grant. Published studio content is shared catalog data and remains available. The separate personal activity reset preserves credentials and purchase access.
+
+Run `npm run test:db` against a disposable local Supabase stack for authorization and cascade tests. With the signed-in app running locally, `npm run test:auth` exercises registration confirmation, route protection, profile updates, password recovery, and deletion using synthetic accounts and local Mailpit. If needed, override the app and Mailpit origins with `STUDIO_AUTH_TEST_URL` and `STUDIO_AUTH_TEST_MAIL`. Both test URLs are restricted to loopback. The standard `npm test` uses synthetic demo data.
+
+## Backup and restore recommendations
+
+- Enable managed backups and choose retention based on how much data loss the studio can tolerate. Use point-in-time recovery if changes between daily backups matter. [Supabase database backups](https://supabase.com/docs/guides/platform/backups)
+- Protect backups as private journal data. Encrypt any exported copies, limit operator access, and record expiry and deletion handling. A backup taken before account deletion can still contain the deleted account until that backup expires.
+- Test restores into an isolated project before launch and periodically afterward. Verify Auth identities, purchases, migrations, RLS, and a synthetic sign-in before a restored environment serves users. Reapply any account deletions that occurred after the backup point before reopening access.
+- Back up any future Supabase Storage file objects separately. Database backups cover storage metadata. [Supabase backup scope](https://supabase.com/docs/guides/platform/backups)

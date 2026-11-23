@@ -15,7 +15,7 @@ import { demo, supabase } from '../../lib/session';
 
 export default async function Page({ params, searchParams }: {
   params: Promise<{ section?: string[] }>;
-  searchParams: Promise<{ confirmation?: string; reflection?: string; workbook?: string; module?: string; saved?: string; attach?: string }>;
+  searchParams: Promise<{ confirmation?: string; reset?: string; deleted?: string; reflection?: string; workbook?: string; module?: string; saved?: string; attach?: string }>;
 }) {
   const { section = [] } = await params;
   const [current = 'dashboard', slug] = section;
@@ -26,7 +26,8 @@ export default async function Page({ params, searchParams }: {
       const { data } = await client.auth.getUser();
       if (data.user) redirect('/');
     }
-    return <Login configured={!!client} failed={(await searchParams).confirmation === 'failed'} />;
+    const query = await searchParams;
+    return <Login configured={!!client} failed={query.confirmation === 'failed'} reset={query.reset === 'success'} deleted={query.deleted === '1'} />;
   }
   if (![...pages.map(page => page.key), 'progress', 'library', 'content-editor'].includes(current) || (current === 'dashboard' && section.length)
     || section.length > (current === 'workbooks' ? 2 : 1)) notFound();

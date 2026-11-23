@@ -13,3 +13,7 @@ supabase/.branches/
 .next-test/
 
 .studio-demo/
+
+.next-auth-test/
+
+test-results-auth/

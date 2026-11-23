@@ -2,9 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { account, demoSnapshot } from './data';
-import { demo, supabase } from './session';
+import { demo } from './session';
 import { z } from 'zod';
 import { changeDemoWorkbooks } from './workbooks/demo-store';
 import { workbookLinks } from './personal/workbook-links';
@@ -12,28 +11,6 @@ import { workbookLinks } from './personal/workbook-links';
 const value = (form: FormData, key: string) => String(form.get(key) ?? '');
 export type ActionState = { message: string; error?: boolean };
 const failure = (message: string): ActionState => ({ message, error: true });
-
-export async function authenticate(_: ActionState, form: FormData): Promise<ActionState> {
-  const client = await supabase(true);
-  if (!client) return failure('Configure the local Supabase environment first.');
-  const email = value(form, 'email').trim();
-  const password = value(form, 'password');
-  if (value(form, 'mode') === 'signup') {
-    const result = await client.auth.signUp({ email, password, options: { data: { display_name: value(form, 'name').trim().slice(0, 80) } } });
-    if (result.error) return failure(result.error.message);
-    if (result.data.session) redirect('/');
-    return { message: 'Check your email for a confirmation link, then sign in.' };
-  }
-  const result = await client.auth.signInWithPassword({ email, password });
-  if (result.error) return failure('Sign-in failed. Check your credentials and email confirmation.');
-  redirect('/');
-}
-
-export async function signOut() {
-  const client = await supabase(true);
-  if (client) await client.auth.signOut({ scope: 'local' });
-  redirect('/login');
-}
 
 export async function save(kind: string, _: ActionState, form: FormData): Promise<ActionState> {
   const id = value(form, 'id');

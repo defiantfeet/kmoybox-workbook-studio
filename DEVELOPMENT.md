@@ -72,3 +72,10 @@ Acceptance requires all exercise types to render from structured content, partia
 2. Build a debounced, revision-checked journal editor, past-entry search and workbook response links. Build milestone editing and progress history.
 3. Add authenticated JSON export and an explicitly confirmed personal activity reset. Preserve the account and purchase record.
 4. Verify autosave, search, workbook linking, milestone progress, dashboard totals, and data controls in browser tests. Check ownership and cascade behavior in PostgreSQL.
+
+## Supabase authentication lifecycle
+
+1. Add user-owned profiles with database provisioning and backfill. Keep Auth identities in `auth.users`, purchases in entitlements, and workbook and module access in the existing catalog.
+2. Add email-based password recovery and password-confirmed account deletion. Bind recovery to the verified Supabase session and keep the deletion client server-only.
+3. Verify cross-account access for profiles, purchases, journals, goals, and progress with synthetic identities. Exercise confirmation, login, recovery, and deletion through Supabase Auth when the local services are available.
+4. Document configuration, migrations, backup and restore testing, and the treatment of deleted accounts in retained backups.

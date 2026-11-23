@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:db": "supabase test db"
+    "test:db": "supabase test db",
+    "test:auth": "playwright test --config playwright.auth.config.ts"
   },
   "repository": {
     "type": "git",
