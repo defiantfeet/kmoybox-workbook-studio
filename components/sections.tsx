@@ -43,74 +43,29 @@ export function Workbook({ data, slug }: { data: StudioData; slug: string }) {
           <label>{prompt.question}<textarea name="body" rows={4} required maxLength={10000} defaultValue={answer?.body} /></label>
           <div className="actions"><button className="primary" name="intent" value="complete">{answer?.completed ? 'Update completed response' : 'Mark complete'}</button><button className="secondary" name="intent" value="draft">Save as draft</button></div>
         </StudioForm>
+        <div className="actions">
+          {answer && <Link className="text-button" href={'/journal?attach=legacy:' + prompt.id + '#new-entry'}>Reflect on this response</Link>}
+          <Link className="text-button" href={'/goals?attach=legacy:' + prompt.id}>Set a related goal</Link>
+        </div>
       </section>;
     })}</div>
   </>;
 }
 
-export function Journal({ data, reflection }: { data: StudioData; reflection?: string }) {
-  return <>
-    <Heading title="Your journal" subtitle="A private place to put your thoughts into words." />
-    <section id="new-entry" className="panel form-panel">
-      <h2>New entry</h2>
-      {reflection && <p className="journal-prompt">{reflection}</p>}
-      <StudioForm action={save.bind(null, 'journal')} className="stack">
-        <label>Title<input name="title" required maxLength={140} /></label>
-        <label>What’s on your mind?<textarea name="body" rows={5} required maxLength={10000} /></label>
-        <button className="primary">Save entry</button>
-      </StudioForm>
-    </section>
-    <section className="dashboard-section stack" aria-labelledby="entries-title">
-      <h2 id="entries-title">Past entries</h2>
-      {!data.journal.length && <p className="panel empty">Your saved entries will appear here.</p>}
-      {data.journal.map(entry => <details className="panel form-panel" key={entry.id}>
-        <summary><strong>{entry.title}</strong> <time dateTime={entry.created_at}>{new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(entry.created_at))}</time></summary>
-        <StudioForm action={save.bind(null, 'journal')} className="stack edit">
-          <input type="hidden" name="id" value={entry.id} />
-          <label>Title<input name="title" defaultValue={entry.title} required maxLength={140} /></label>
-          <label>Entry<textarea name="body" rows={5} defaultValue={entry.body} required maxLength={10000} /></label>
-          <div className="actions"><button className="primary">Update entry</button><button name="intent" value="delete" className="secondary" formNoValidate>Delete entry</button></div>
-        </StudioForm>
-      </details>)}
-    </section>
-  </>;
-}
-
-export function Goals({ data }: { data: StudioData }) {
-  return <>
-    <Heading title="Your goals" subtitle="Choose what matters to you and give it a next step." />
-    <section className="panel form-panel">
-      <h2>Set a goal</h2>
-      <StudioForm action={save.bind(null, 'goal')} className="stack">
-        <label>Goal<input name="title" required maxLength={140} /></label>
-        <label>Target date (optional)<input name="date" type="date" /></label>
-        <button className="primary">Add goal</button>
-      </StudioForm>
-    </section>
-    <section className="dashboard-section stack" aria-labelledby="saved-goals-title">
-      <h2 id="saved-goals-title">Saved goals</h2>
-      {!data.goals.length && <p className="panel empty">Your goals will appear here.</p>}
-      {data.goals.map(goal => <details className="panel form-panel" key={goal.id}>
-        <summary><strong>{goal.title}</strong> <span>{goal.completed ? 'Completed' : 'In progress'}{goal.target_date ? ' · ' + goal.target_date : ''}</span></summary>
-        <StudioForm action={save.bind(null, 'goal')} className="stack edit">
-          <input type="hidden" name="id" value={goal.id} />
-          <input type="hidden" name="completed" value={String(!goal.completed)} />
-          <label>Goal<input name="title" defaultValue={goal.title} required maxLength={140} /></label>
-          <label>Target date (optional)<input name="date" type="date" defaultValue={goal.target_date ?? ''} /></label>
-          <div className="actions"><button className="primary">Update goal</button><button name="intent" value="toggle" className="secondary" formNoValidate>{goal.completed ? 'Reopen goal' : 'Complete goal'}</button><button name="intent" value="delete" className="secondary" formNoValidate>Delete goal</button></div>
-        </StudioForm>
-      </details>)}
-    </section>
-  </>;
-}
-
 export function Progress({ data }: { data: StudioData }) {
+  const milestones = data.milestones ?? [];
+  const completedMilestones = milestones.filter(item => item.completed).length;
   const complete = data.goals.filter(goal => goal.completed).length;
   const products = data.products.filter(product => product.free || data.purchased.includes(product.slug));
   return <>
     <Heading title="Your progress" subtitle="See how far you’ve come across your workbooks and goals." />
     <div className="stack">
       <section className="panel form-panel"><h2>Goals</h2><p>{complete} of {data.goals.length} completed</p><Meter percent={data.goals.length ? Math.round(100 * complete / data.goals.length) : 0} label="Goal completion" /></section>
+      {milestones.length > 0 && <section className="panel form-panel"><h2>Milestones</h2>
+        <p>{completedMilestones} of {milestones.length} milestones complete</p>
+        <Meter percent={Math.round(completedMilestones / milestones.length * 100)} label="Milestone completion" />
+        <Link href="/goals" className="text-button">View goal history</Link>
+      </section>}
       {products.map(product => {
         const stats = progress(product.slug, data.prompts, data.answers);
         return <section className="panel form-panel" key={product.slug}><h2><Link href={'/workbooks/' + product.slug}>{product.title}</Link></h2><p>{stats.done} of {stats.total} exercises completed</p><Meter percent={stats.percent} label={product.title + ' completion'} /></section>;

@@ -80,3 +80,16 @@ export async function canEditWorkbooks() {
   const { data } = await client.from('workbook_editor_accounts').select('user_id').eq('user_id', user.id).maybeSingle();
   return !!data;
 }
+
+export async function completedModuleCount() {
+  if (demo) {
+    const { modules, progress } = await readDemoWorkbooks();
+    return progress.filter(item => item.completed && modules.some(module =>
+      module.id === item.module_id && module.published && module.revision === item.revision)).length;
+  }
+  const { client, user } = await account();
+  const { data, error } = await client.from('engine_progress').select('revision,engine_modules!inner(revision)')
+    .eq('user_id', user.id).eq('completed', true);
+  if (error) throw new Error('Workbook progress could not load.');
+  return (data ?? []).filter(item => item.revision === (item.engine_modules as unknown as { revision: number }).revision).length;
+}

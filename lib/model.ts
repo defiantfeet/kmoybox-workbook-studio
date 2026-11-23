@@ -5,11 +5,14 @@ export type Prompt = {
   id: number; product_slug: string; position: number; title: string; question: string;
 };
 export type Answer = { prompt_id: number; body: string; completed: boolean };
-export type Journal = { id: string; title: string; body: string; created_at: string };
-export type Goal = { id: string; title: string; target_date: string | null; completed: boolean };
+export type Journal = { id: string; title: string; body: string; created_at: string; updated_at?: string; mood?: string | null; workbook_ref?: string | null };
+export type Goal = { id: string; title: string; target_date: string | null; completed: boolean; workbook_ref?: string | null; created_at?: string };
+export type Milestone = { id: string; goal_id: string; title: string; completed: boolean; created_at: string };
+export type GoalActivity = { id: string; goal_id: string; kind: string; title: string; created_at: string };
+export type WorkbookLink = { ref: string; label: string; href: string };
 export type StudioData = {
   products: Product[]; prompts: Prompt[]; purchased: string[];
-  answers: Answer[]; journal: Journal[]; goals: Goal[];
+  answers: Answer[]; journal: Journal[]; goals: Goal[]; milestones?: Milestone[]; activity?: GoalActivity[];
 };
 export function progress(product: string, prompts: Prompt[], answers: Answer[]) {
   const exercises = prompts.filter(prompt => prompt.product_slug === product);

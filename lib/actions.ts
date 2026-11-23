@@ -5,6 +5,9 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { account, demoSnapshot } from './data';
 import { demo, supabase } from './session';
+import { z } from 'zod';
+import { changeDemoWorkbooks } from './workbooks/demo-store';
+import { workbookLinks } from './personal/workbook-links';
 
 const value = (form: FormData, key: string) => String(form.get(key) ?? '');
 export type ActionState = { message: string; error?: boolean };
@@ -38,12 +41,13 @@ export async function save(kind: string, _: ActionState, form: FormData): Promis
   const title = value(form, 'title').trim();
   const body = value(form, 'body').trim();
   const target_date = value(form, 'date') || null;
+  const workbook_ref = value(form, 'workbook_ref') || null;
   const prompt_id = Number(id);
   const completed = value(form, 'completed') === 'true';
   const removing = intent === 'delete';
   const finishing = intent === 'toggle';
-  if (!['workbook', 'journal', 'goal'].includes(kind)) return failure('Unknown form.');
-  if (target_date && !/^\d{4}-\d{2}-\d{2}$/.test(target_date)) return failure('Enter a valid date.');
+  if (!['workbook', 'goal'].includes(kind)) return failure('Unknown form.');
+  if (target_date && !z.iso.date().safeParse(target_date).success) return failure('Enter a valid date.');
   if (!removing && !finishing) {
     if (kind !== 'workbook' && (!title || title.length > 140)) return failure('Enter a title up to 140 characters.');
     if (kind !== 'goal' && (!body || body.length > 10000)) return failure('Enter a response up to 10,000 characters.');
@@ -56,34 +60,45 @@ export async function save(kind: string, _: ActionState, form: FormData): Promis
   if (demo) {
     const snapshot = await demoSnapshot();
     const jar = await cookies();
-    const answer = { prompt_id, body, completed: intent === 'complete' };
-    let key: string;
-    let rows: unknown[];
     if (kind === 'workbook') {
       if (!snapshot.prompts.some(prompt => prompt.id === prompt_id)) return failure('Exercise unavailable.');
-      key = 'answers';
-      rows = [...snapshot.answers.filter(item => item.prompt_id !== prompt_id), answer];
-    } else if (kind === 'journal') {
-      key = 'journal';
-      const existing = snapshot.journal.find(item => item.id === id);
-      const entry = { id: id || crypto.randomUUID(), title, body, created_at: existing?.created_at ?? new Date().toISOString() };
-      rows = removing ? snapshot.journal.filter(item => item.id !== id)
-        : id ? snapshot.journal.map(item => item.id === id ? entry : item) : [entry, ...snapshot.journal];
+      await changeDemoWorkbooks(state => {
+        state.legacyAnswers = [...(state.legacyAnswers ?? snapshot.answers).filter(item => item.prompt_id !== prompt_id),
+          { prompt_id, body, completed: intent === 'complete' }];
+      });
+      jar.delete('studio-answers');
     } else {
-      key = 'goals';
-      const goal = { id: id || crypto.randomUUID(), title, target_date, completed: false };
-      rows = removing ? snapshot.goals.filter(item => item.id !== id)
-        : id ? snapshot.goals.map(item => item.id === id ? finishing ? { ...item, completed } : { ...item, title, target_date } : item)
-        : [...snapshot.goals, goal];
+      const original = snapshot.goals.find(item => item.id === id);
+      if (!removing && !finishing && workbook_ref && workbook_ref !== original?.workbook_ref
+        && !(await workbookLinks(snapshot, false)).some(item => item.ref === workbook_ref)) return failure('Workbook exercise unavailable.');
+      const saved = await changeDemoWorkbooks(state => {
+        const goals = state.goals ?? snapshot.goals;
+        const goal = goals.find(item => item.id === id);
+        if (id && !goal) return false;
+        const now = new Date().toISOString();
+        if (removing) {
+          state.goals = goals.filter(item => item.id !== id);
+          state.milestones = (state.milestones ?? []).filter(item => item.goal_id !== id);
+          state.activity = (state.activity ?? []).filter(item => item.goal_id !== id);
+        } else if (goal) {
+          state.goals = goals.map(item => item.id === id ? finishing ? { ...item, completed } : { ...item, title, target_date, workbook_ref } : item);
+          if (finishing && completed !== goal.completed) state.activity = [
+            { id: crypto.randomUUID(), goal_id: id, title: goal.title, kind: completed ? 'goal-completed' : 'goal-reopened', created_at: now }, ...(state.activity ?? [])];
+        } else {
+          const newId = crypto.randomUUID();
+          state.goals = [...goals, { id: newId, title, target_date, workbook_ref, completed: false, created_at: now }];
+          state.activity = [{ id: crypto.randomUUID(), goal_id: newId, title, kind: 'goal-created', created_at: now }, ...(state.activity ?? [])];
+        }
+        return true;
+      });
+      if (!saved) return failure('Goal unavailable.');
+      jar.delete('studio-goals');
     }
-    const payload = JSON.stringify(rows);
-    if (encodeURIComponent(payload).length > 3700) return failure('This sample preview has limited storage. Shorten the text or use local Supabase.');
-    jar.set('studio-' + key, payload, { httpOnly: true, sameSite: 'lax', path: '/' });
   } else {
     const { client, user } = await account(true);
     const user_id = user.id;
-    const table = kind === 'journal' ? 'journal_entries' : 'goals';
-    const fields = kind === 'journal' ? { title, body } : finishing ? { completed } : { title, target_date };
+    const table = 'goals';
+    const fields = finishing ? { completed } : { title, target_date, workbook_ref };
     const result = kind === 'workbook'
       ? await client.from('responses').upsert({ user_id, prompt_id, body, completed: intent === 'complete' })
       : removing ? await client.from(table).delete().eq('id', id).eq('user_id', user_id).select('id').single()

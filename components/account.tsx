@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, LogOut } from 'lucide-react';
+import { StudioForm } from './forms';
+import { deletePersonalActivity } from '../lib/personal/actions';
 import { signOut } from '../lib/actions';
 import { Heading } from './studio';
 
@@ -8,7 +10,7 @@ export function Account({ displayName, email, sample, canEdit }: { displayName: 
     <Heading title="Your account" subtitle="View your profile and purchased workbooks." />
     <section className="panel form-panel account-panel" aria-labelledby="profile-title">
       <h2 id="profile-title">Profile</h2>
-      {sample && <p>This sample profile and any changes you make here in the studio are for demonstration. Sample changes are stored in this browser.</p>}
+      {sample && <p>This sample profile and any changes you make here in the studio are for demonstration. Sample changes belong to this browser session.</p>}
       <dl>
         <div><dt>Name</dt><dd>{displayName || '—'}</dd></div>
         <div><dt>Email</dt><dd>{email || '—'}</dd></div>
@@ -18,6 +20,19 @@ export function Account({ displayName, email, sample, canEdit }: { displayName: 
         {canEdit && <Link className="secondary" href="/content-editor">Workbook content editor</Link>}
         {!sample && <form action={signOut}><button className="secondary"><LogOut size={16} aria-hidden /> Sign out</button></form>}
       </div>
+    </section>
+    <section className="panel form-panel account-panel dashboard-section" aria-labelledby="personal-data-title">
+      <h2 id="personal-data-title">Personal data</h2>
+      <p>Export or delete your journal entries, mood check-ins, goals, milestone history, and workbook responses. Your sign-in and purchases stay active.</p>
+      <a className="secondary" href="/personal-data">Download personal data (JSON)</a>
+      <details className="edit">
+        <summary>Delete personal activity</summary>
+        <p className="muted">This permanently removes the saved activity listed above.</p>
+        <StudioForm className="stack edit" action={deletePersonalActivity}>
+          <label>Type DELETE to confirm<input name="confirmation" required autoComplete="off" pattern="DELETE" /></label>
+          <button className="secondary">Permanently delete my activity</button>
+        </StudioForm>
+      </details>
     </section>
   </>;
 }

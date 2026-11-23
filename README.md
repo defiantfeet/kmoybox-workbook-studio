@@ -24,7 +24,7 @@ on conflict do nothing;
 
 The product library uses these entitlements. A checkout or external store integration is outside this development implementation. The workbooks in the seed catalog are sample editorial content.
 
-For a credential-free preview, run `STUDIO_DEMO=1 npm run dev`. Open http://localhost:3000 to explore the labeled sample dashboard. Sample workbook, journal, and goal edits use browser-scoped cookies. The daily prompt and weekly goal date range use Pacific time. Use fictitious text in this mode.
+For a credential-free preview, run `STUDIO_DEMO=1 npm run dev`. Open http://localhost:3000 to explore the labeled sample dashboard. Sample workbook, journal, and goal edits use a browser-scoped local demo session. The daily prompt and weekly goal date range use Pacific time. Use fictitious text in this mode.
 
 ## Checks
 
@@ -53,3 +53,11 @@ on conflict do nothing;
 ```
 
 The [demo content file](content/the-dancer-mindset.json) documents format version 1. Workbook metadata contains a title, description, and URL slug. Each module has a chapter title, chapter order, module order, and ordered blocks with stable UUIDs. Each block has a type and the corresponding lesson, prompt, choices, or range labels. Reuse a chapter title and its order to group modules together. The editor generates and retains the IDs automatically, so adding a workbook requires no source changes.
+
+## Journal, goals, and personal data
+
+Journal changes save after a short pause or when you leave the editor. You can also save immediately. Search matches saved titles and reflection text. The mood check-in records a mood you choose. Use the workbook selector to link a saved response or connect a goal to a workbook exercise.
+
+Goal completion and milestone completion are tracked separately. Each goal displays its milestone progress and dated activity, and the dashboard shows totals from saved records.
+
+In **Account → Personal data**, download your journal entries, goals, milestones, goal history, and workbook responses as JSON, or permanently delete that activity by typing `DELETE` and submitting the confirmation. The reset preserves sign-in and purchases. Demo activity is isolated by browser session in the local SQLite store.

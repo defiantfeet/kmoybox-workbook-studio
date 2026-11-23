@@ -1,10 +1,11 @@
 import { mkdirSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { cookies } from 'next/headers';
+import type { Answer, Goal, GoalActivity, Journal, Milestone } from '../model';
 import example from '../../content/the-dancer-mindset.json';
 import { moduleSchema, type ModuleProgress, type ModuleRecord, type WorkbookRecord } from './schema';
 
-type DemoState = { books: WorkbookRecord[]; modules: ModuleRecord[]; progress: ModuleProgress[] };
+type DemoState = { books: WorkbookRecord[]; modules: ModuleRecord[]; progress: ModuleProgress[]; journal?: Journal[]; goals?: Goal[]; milestones?: Milestone[]; activity?: GoalActivity[]; legacyAnswers?: Answer[] };
 
 function initialState(): DemoState {
   return {

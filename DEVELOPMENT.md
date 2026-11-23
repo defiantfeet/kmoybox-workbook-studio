@@ -65,3 +65,10 @@ Owned records use Supabase Auth user IDs. RLS restricts private rows to the sign
 | engine_progress | Per-account, per-module responses with completion tied to the published revision |
 
 Acceptance requires all exercise types to render from structured content, partial answers to survive reload, completion to require all valid answers, draft content to remain private, and member reports to contain only their own saved responses.
+
+## Private journal and goals
+
+1. Extend existing journal and goal records with optional workbook links and mood. Add owner-scoped milestones and timestamped goal activity.
+2. Build a debounced, revision-checked journal editor, past-entry search and workbook response links. Build milestone editing and progress history.
+3. Add authenticated JSON export and an explicitly confirmed personal activity reset. Preserve the account and purchase record.
+4. Verify autosave, search, workbook linking, milestone progress, dashboard totals, and data controls in browser tests. Check ownership and cascade behavior in PostgreSQL.

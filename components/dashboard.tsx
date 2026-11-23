@@ -5,7 +5,7 @@ import { currentWeek, dailyReflection, dateKey, progress, type StudioData } from
 import { StudioForm } from './forms';
 import { Meter, ProductCard, WorkbookCover } from './studio';
 
-export function Dashboard({ name, data, now }: { name: string; data: StudioData; now: Date }) {
+export function Dashboard({ name, data, now, completedModules }: { name: string; data: StudioData; now: Date; completedModules: number }) {
   const available = data.products.filter(product => product.free || data.purchased.includes(product.slug));
   const workbooks = available.map(product => ({
     product,
@@ -18,6 +18,7 @@ export function Dashboard({ name, data, now }: { name: string; data: StudioData;
     prompt.product_slug === continuation.product.slug && !completedAnswers.has(prompt.id));
   const { start, end } = currentWeek(now);
   const weeklyGoals = data.goals.filter(goal => goal.target_date && goal.target_date >= dateKey(start) && goal.target_date <= dateKey(end));
+  const milestones = data.milestones ?? [];
   const weekCompleted = weeklyGoals.filter(goal => goal.completed).length;
   const weekLabel = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).formatRange(start, end);
   const metrics = [
@@ -90,6 +91,10 @@ export function Dashboard({ name, data, now }: { name: string; data: StudioData;
 
     <section aria-labelledby="overview-title" className="dashboard-section">
       <div className="section-head"><h2 id="overview-title">Progress Overview</h2><Link className="text-button" href="/progress">View progress <ArrowRight size={15} aria-hidden /></Link></div>
+      {(milestones.length > 0 || completedModules > 0) && <div className="panel dashboard-milestones">
+        {milestones.length > 0 && <p>{milestones.filter(item => item.completed).length} of {milestones.length} milestones complete</p>}
+        {completedModules > 0 && <p>{completedModules} workbook {completedModules === 1 ? 'module' : 'modules'} complete</p>}
+      </div>}
       <div className="metrics">{metrics.map(({ title, amount, icon: Icon, tone }) => <article className="panel metric" key={title}><span className={'metric-icon ' + tone}><Icon size={18} strokeWidth={1.7} aria-hidden /></span><strong>{amount}</strong><p>{title}</p></article>)}</div>
     </section>
   </>;

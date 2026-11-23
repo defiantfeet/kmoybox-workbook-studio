@@ -193,3 +193,22 @@ fieldset.exercise-options { display: grid; gap: 10px; }
 @media (max-width: 480px) {
   .editor-fields { grid-template-columns: 1fr; }
 }
+
+.journal-form select, .workbook-connection select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #c6b7bc;
+  border-radius: 7px;
+  background: white;
+  color: var(--color-charcoal);
+}
+.journal-search, .milestone-controls { align-items: end; }
+.journal-search label, .milestone-controls label { flex: 1 1 180px; }
+.journal-delete { margin-top: 10px; }
+.journal-form [role=status]:empty { display: none; }
+.milestone-panel { border-top: 1px solid var(--line); padding-top: 14px; }
+.milestone-panel h3 { margin-bottom: 6px; }
+.milestone-controls, .goal-history li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.goal-history li { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.goal-history time { color: var(--muted); font-size: .85rem; }
+.dashboard-milestones { padding: 11px 15px; margin-bottom: 12px; }
