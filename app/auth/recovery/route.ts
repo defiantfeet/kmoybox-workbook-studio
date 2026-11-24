@@ -1,12 +1,18 @@
 import { NextRequest } from 'next/server';
+import { emailLinkPage, emailToken, submittedEmailToken } from '../../../lib/auth/email-link';
 import { allowRecovery, authRedirect, clearRecovery, recoveryConfigured } from '../../../lib/auth/recovery';
 import { demo, supabase } from '../../../lib/session';
 
 export async function GET(request: NextRequest) {
-  const token_hash = request.nextUrl.searchParams.get('token_hash');
+  return emailLinkPage('/auth/recovery', emailToken(request.nextUrl.searchParams.get('token_hash')),
+    'Reset your password', 'Continue to password reset', '/forgot-password?expired=1');
+}
+
+export async function POST(request: Request) {
+  const token_hash = await submittedEmailToken(request);
   let destination = '/forgot-password?expired=1';
   const client = demo ? null : await supabase(true);
-  if (client && recoveryConfigured() && token_hash && token_hash.length <= 400) {
+  if (client && recoveryConfigured() && token_hash) {
     await clearRecovery();
     const verified = await client.auth.verifyOtp({ token_hash, type: 'recovery' });
     if (!verified.error && verified.data.user && verified.data.session) {
@@ -19,5 +25,5 @@ export async function GET(request: NextRequest) {
       }
     }
   }
-  return authRedirect(destination);
+  return authRedirect(destination, 303);
 }
