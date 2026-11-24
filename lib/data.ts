@@ -6,6 +6,7 @@ import { sampleData } from './demo';
 import { studioDay, type StudioData } from './model';
 
 export async function demoSnapshot(now = studioDay(new Date())): Promise<StudioData> {
+  if (!demo) throw new Error('Demo data is only available in demo mode.');
   const jar = await cookies();
   const demoData = sampleData(now);
   const saved = await readDemoWorkbooks();
@@ -31,7 +32,11 @@ export async function demoSnapshot(now = studioDay(new Date())): Promise<StudioD
 export async function account(writable = false) {
   const client = await supabase(writable);
   if (!client) redirect('/login');
-  const { data: { user } } = await client.auth.getUser();
+  const { data: { user }, error } = await client.auth.getUser();
+  if (error && (error.status === undefined || error.status === 0 || error.status === 429 || error.status >= 500)) {
+    console.error('Studio authentication request failed', { code: error.code ?? 'request_failed' });
+    throw new Error('The studio could not verify your sign-in. Please try again.');
+  }
   if (!user) redirect('/login');
   return { client, user };
 }
@@ -51,17 +56,19 @@ export async function studio(now = studioDay(new Date())) {
   if (demo) return { data: await demoSnapshot(now), name: 'Alex', displayName: 'Alex Morgan', email: 'alex@example.com' };
   const { client, user } = await account();
   const [products, prompts, entitlements, answers, journal, goals, milestones, activity, profile] = await Promise.all([
-    client.from('products').select('slug,title,summary,free').order('free', { ascending: false }).order('slug'),
+    client.from('products').select('slug,title,summary,free').eq('sample', false).order('free', { ascending: false }).order('slug'),
     client.from('prompts').select('id,product_slug,position,title,question').order('position'),
-    client.from('entitlements').select('product_slug'),
-    client.from('responses').select('prompt_id,body,completed'),
-    readPages((start, end) => client.from('journal_entries').select('id,title,body,created_at,updated_at,mood,workbook_ref')
+    readPages((start, end) => client.from('entitlements').select('product_slug').eq('user_id', user.id)
+      .order('product_slug').range(start, end)),
+    readPages((start, end) => client.from('responses').select('prompt_id,body,completed').eq('user_id', user.id)
+      .order('prompt_id').range(start, end)),
+    readPages((start, end) => client.from('journal_entries').select('id,title,body,created_at,updated_at,mood,workbook_ref').eq('user_id', user.id)
       .order('created_at', { ascending: false }).order('id').range(start, end)),
-    readPages((start, end) => client.from('goals').select('id,title,target_date,completed,workbook_ref,created_at')
+    readPages((start, end) => client.from('goals').select('id,title,target_date,completed,workbook_ref,created_at').eq('user_id', user.id)
       .order('completed').order('target_date').order('id').range(start, end)),
-    readPages((start, end) => client.from('goal_milestones').select('id,goal_id,title,completed,created_at')
+    readPages((start, end) => client.from('goal_milestones').select('id,goal_id,title,completed,created_at').eq('user_id', user.id)
       .order('created_at').order('id').range(start, end)),
-    readPages((start, end) => client.from('goal_activity').select('id,goal_id,kind,title,created_at')
+    readPages((start, end) => client.from('goal_activity').select('id,goal_id,kind,title,created_at').eq('user_id', user.id)
       .order('created_at', { ascending: false }).order('id').range(start, end)),
     client.from('profiles').select('display_name').eq('id', user.id).single(),
   ]);
@@ -75,9 +82,10 @@ export async function studio(now = studioDay(new Date())) {
     console.error('Studio data request failed', failures);
     throw new Error('The studio could not load. Please try again.');
   }
+  const visibleProducts = new Set(products.data?.map(product => product.slug));
   const data: StudioData = {
     products: products.data ?? [], prompts: prompts.data ?? [],
-    purchased: entitlements.data?.map(row => row.product_slug) ?? [],
+    purchased: entitlements.data?.flatMap(row => visibleProducts.has(row.product_slug) ? [row.product_slug] : []) ?? [],
     answers: answers.data ?? [], journal: journal.data ?? [], goals: goals.data ?? [], milestones: milestones.data ?? [], activity: activity.data ?? [],
   };
   const displayName = profile.data?.display_name ?? '';

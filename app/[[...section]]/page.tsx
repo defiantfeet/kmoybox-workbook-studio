@@ -38,10 +38,10 @@ export default async function Page({ params, searchParams }: {
   const query = await searchParams;
   const engineBook = current === 'workbooks' && slug && !data.products.some(product => product.slug === slug)
     ? await publishedWorkbook(slug) : null;
-  const engineLibrary = current === 'workbooks' || current === 'library' ? await workbookLibrary() : [];
+  const engineLibrary = current === 'workbooks' || current === 'library' || current === 'dashboard' && !demo ? await workbookLibrary() : [];
   const offer = engineLibrary.find(book => book.slug === slug);
   return <Shell current={current} name={name} sample={demo}>
-    {current === 'dashboard' && <Dashboard name={name} data={data} now={now} completedModules={await completedModuleCount()} />}
+    {current === 'dashboard' && <Dashboard name={name} data={data} now={now} engineLibrary={engineLibrary} completedModules={await completedModuleCount()} />}
     {current === 'workbooks' && (engineBook ? <WorkbookEngine workbook={engineBook} selected={query.module} />
       : offer && !offer.unlocked ? <LockedWorkbook book={offer} />
       : slug ? <Workbook slug={slug} data={data} /> : <Workbooks data={data} engineLibrary={engineLibrary} />)}

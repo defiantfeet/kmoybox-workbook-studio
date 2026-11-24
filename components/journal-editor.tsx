@@ -17,6 +17,7 @@ export function JournalEditor({ entry, draftId, links, attached }: { entry?: Jou
   const [message, setMessage] = useState('');
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [copyStatus, setCopyStatus] = useState('');
   const id = useRef(entry?.id ?? draftId);
   const revision = useRef(entry?.updated_at ?? entry?.created_at ?? null);
   const last = useRef(fields);
@@ -63,12 +64,27 @@ export function JournalEditor({ entry, draftId, links, attached }: { entry?: Jou
   useEffect(() => {
     if (!dirty) return;
     function warn(event: BeforeUnloadEvent) { event.preventDefault(); event.returnValue = ''; }
+    function confirmNavigation(event: MouseEvent) {
+      const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+      if (!(link instanceof HTMLAnchorElement) || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey
+        || event.shiftKey || event.altKey || link.target === '_blank' || link.hasAttribute('download')) return;
+      const destination = new URL(link.href);
+      if (destination.origin !== location.origin || destination.pathname !== location.pathname
+        || destination.search !== location.search) {
+        if (!window.confirm('This journal entry has unsaved changes. Leave anyway?')) event.preventDefault();
+      }
+    }
     window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
+    document.addEventListener('click', confirmNavigation, true);
+    return () => {
+      window.removeEventListener('beforeunload', warn);
+      document.removeEventListener('click', confirmNavigation, true);
+    };
   }, [dirty]);
 
   function update<T extends keyof Fields>(key: T, value: Fields[T]) {
     setFailed(false);
+    setCopyStatus('');
     setFields(previous => ({ ...previous, [key]: value }));
   }
 
@@ -96,8 +112,17 @@ export function JournalEditor({ entry, draftId, links, attached }: { entry?: Jou
       <div className="actions">
         <button className="primary" disabled={busy}>{entry ? 'Update entry' : 'Save entry'}</button>
         {!entry && revision.current && <button className="secondary" type="button" disabled={dirty || busy} onClick={startAnother}>Start another entry</button>}
+        {failed && <button className="secondary" type="button" onClick={async () => {
+          try {
+            await navigator.clipboard.writeText([fields.title, fields.body].filter(Boolean).join('\n\n'));
+            setCopyStatus('Unsaved text copied.');
+          } catch {
+            setCopyStatus('Copy is unavailable. Select and copy your text manually.');
+          }
+        }}>Copy unsaved text</button>}
       </div>
     </fieldset>
-    <p role={failed ? 'alert' : 'status'} className={failed ? 'error' : 'feedback'}>{message}</p>
+    <p role={failed ? 'alert' : 'status'} className={failed ? 'error' : 'feedback'}>{dirty && !failed && !busy ? 'Unsaved changes.' : message}</p>
+    {failed && copyStatus && <p role="status">{copyStatus}</p>}
   </form>;
 }

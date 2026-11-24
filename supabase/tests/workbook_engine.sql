@@ -1,6 +1,7 @@
 begin;
+update public.engine_workbooks set sample = false where slug = 'the-dancer-mindset';
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(13);
 
 insert into auth.users (id, email) values
   ('00000000-0000-4000-8000-000000000011', 'editor@example.test'),
@@ -31,6 +32,9 @@ select is((select count(*) from public.engine_progress), 1::bigint, 'learner can
 
 set local request.jwt.claim.sub = '00000000-0000-4000-8000-000000000011';
 select is((select count(*) from public.engine_progress), 0::bigint, 'editors cannot see learner answers');
+with changed as (update public.engine_progress set completed = false returning module_id)
+select is((select count(*) from changed), 0::bigint, 'editors cannot update learner answers');
+
 select is(public.publish_workbook_module('40000000-0000-4000-8000-000000000001', 2), false, 'stale publication is rejected');
 select is(public.publish_workbook_module('40000000-0000-4000-8000-000000000001', 1), true, 'editor can publish a saved module');
 update public.engine_module_drafts set content = jsonb_set(content, '{title}', '"Changed draft"'), edit_version = 2

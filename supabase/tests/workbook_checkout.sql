@@ -1,4 +1,5 @@
 begin;
+update public.engine_workbooks set sample = false where slug = 'the-dancer-mindset';
 create extension if not exists pgtap with schema extensions;
 select plan(22);
 
@@ -11,7 +12,7 @@ insert into public.workbook_prices values ('the-dancer-mindset','price_synthetic
 set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-4000-8000-000000000051';
 select is((select amount from public.workbook_storefront() where slug = 'the-dancer-mindset'), 1200, 'locked workbook price is visible');
-select is((select count(*) from public.engine_modules), 0::bigint, 'unpaid module content is hidden');
+select is((select count(*) from public.engine_modules where workbook_slug = 'the-dancer-mindset'), 0::bigint, 'unpaid module content is hidden');
 select throws_ok($$insert into public.engine_progress (user_id,module_id,revision,answers)
 values ('00000000-0000-4000-8000-000000000051','10000000-0000-4000-8000-000000000001',1,'{}')$$,
 '42501',null,'unpaid module responses cannot be created');
@@ -32,17 +33,17 @@ select is(public.record_workbook_payment('evt_price_mismatch',(select (order_row
 'mismatch','incorrect amount does not grant access');
 
 set local role authenticated;
-select is((select count(*) from public.engine_modules),0::bigint,'a pending purchase still cannot read modules');
+select is((select count(*) from public.engine_modules where workbook_slug = 'the-dancer-mindset'),0::bigint,'a pending purchase still cannot read modules');
 reset role;
 select is(public.record_workbook_payment('evt_payment',(select (order_row->>'id')::uuid from purchase_test),'cs_test_first','pi_test_first','paid',1200,'usd',0),
 'recorded','verified full payment is recorded');
 select is(public.record_workbook_payment('evt_payment',(select (order_row->>'id')::uuid from purchase_test),'cs_test_first','pi_test_first','paid',1200,'usd',0),
 'duplicate','redelivery is idempotent');
 set local role authenticated;
-select is((select count(*) from public.engine_modules),3::bigint,'payment unlocks modules for the buyer');
+select is((select count(*) from public.engine_modules where workbook_slug = 'the-dancer-mindset'),3::bigint,'payment unlocks modules for the buyer');
 set local request.jwt.claim.sub = '00000000-0000-4000-8000-000000000052';
 select is((select count(*) from public.workbook_purchases),0::bigint,'another learner cannot see purchase history');
-select is((select count(*) from public.engine_modules),0::bigint,'another learner stays locked');
+select is((select count(*) from public.engine_modules where workbook_slug = 'the-dancer-mindset'),0::bigint,'another learner stays locked');
 reset role;
 
 select public.record_workbook_payment('evt_partial',(select (order_row->>'id')::uuid from purchase_test),null,'pi_test_first','refund',1200,'usd',200);
@@ -50,7 +51,7 @@ select is((select status from public.workbook_purchases),'paid','partial refunds
 select public.record_workbook_payment('evt_full',(select (order_row->>'id')::uuid from purchase_test),null,'pi_test_first','refund',1200,'usd',1200);
 set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-4000-8000-000000000051';
-select is((select count(*) from public.engine_modules),0::bigint,'full refunds revoke module access');
+select is((select count(*) from public.engine_modules where workbook_slug = 'the-dancer-mindset'),0::bigint,'full refunds revoke module access');
 reset role;
 select public.record_workbook_payment('evt_late',(select (order_row->>'id')::uuid from purchase_test),'cs_test_first','pi_test_first','paid',1200,'usd',0);
 select is((select status from public.workbook_purchases),'refunded','late payment events cannot re-unlock a refunded purchase');

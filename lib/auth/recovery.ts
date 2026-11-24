@@ -8,12 +8,26 @@ import { authCookieOptions } from './cookie-options';
 const cookie = 'studio-recovery';
 const maxAge = 15 * 60;
 
-export function authOrigin() {
-  return new URL(process.env.STUDIO_SITE_URL || 'http://localhost:3000').origin;
+export function authURL(path: string) {
+  const configured = process.env.STUDIO_SITE_URL;
+  if (!configured && process.env.NODE_ENV === 'production') return null;
+  try {
+    const url = new URL(configured || 'http://localhost:3000');
+    const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+    if ((!local && url.protocol !== 'https:') || !['http:', 'https:'].includes(url.protocol)
+      || url.username || url.password || url.pathname !== '/' || url.search || url.hash
+      || (local && (process.env.VERCEL === '1' || process.env.VERCEL_ENV))) return null;
+    return new URL(studioPath(path), url.origin);
+  } catch {
+    return null;
+  }
 }
 
-export function authURL(path: string) {
-  return new URL(studioPath(path), authOrigin());
+export function authRedirect(path: string) {
+  return new Response(null, {
+    status: 307,
+    headers: { Location: studioPath(path), 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer' },
+  });
 }
 
 function signature(value: string) {

@@ -18,6 +18,9 @@ const error = (message: string): ActionState => ({ message, error: true });
 
 export async function startWorkbookCheckout(slug: string): Promise<ActionState> {
   if (demo || !slugSchema.safeParse(slug).success) return error('Test Checkout is unavailable.');
+  const successURL = authURL('/purchases?checkout=complete');
+  const cancelURL = authURL('/workbooks/' + slug);
+  if (!successURL || !cancelURL) return { message: 'Checkout is temporarily unavailable.', error: true };
   const { user } = await account();
   const stripe = testStripe();
   const admin = accountAdmin();
@@ -50,8 +53,8 @@ export async function startWorkbookCheckout(slug: string): Promise<ActionState> 
         client_reference_id: order.id,
         metadata,
         payment_intent_data: { metadata },
-        success_url: authURL('/purchases?checkout=complete').href,
-        cancel_url: authURL('/workbooks/' + slug).href,
+        success_url: successURL.href,
+        cancel_url: cancelURL.href,
       }, { idempotencyKey: 'studio-workbook-' + order.id });
       if (session.livemode !== false || !session.id.startsWith('cs_test_')) return error('Test Checkout is unavailable.');
       const bound = await admin.rpc('bind_workbook_checkout', { purchase_id: order.id, session_id: session.id });

@@ -104,7 +104,7 @@ export async function autosaveJournal(
   if (!title && !body) return { error: 'Add a title or reflection before saving.' };
   const fields = { title, body, mood: mood || null, workbook_ref: workbook_ref || null };
   const updated_at = new Date().toISOString();
-  const conflict = { error: 'This entry changed in another view. Reload the page before editing again.' };
+  const conflict = { error: 'This entry changed in another view. Copy your unsaved text before reloading.' };
   if (demo) {
     const snapshot = await demoSnapshot();
     const previous = snapshot.journal.find(item => item.id === id);
@@ -127,7 +127,15 @@ export async function autosaveJournal(
       ? await table.update({ ...fields, updated_at }).eq('id', id).eq('user_id', user.id).eq('updated_at', revision).select('id').maybeSingle()
       : await table.insert({ ...fields, id, user_id: user.id, updated_at }).select('id').single();
     if (result.error?.code === '23514') return { error: 'Workbook response unavailable.' };
-    if (result.error?.code === '23505' || !result.error && !result.data) return conflict;
+    if (result.error?.code === '23505' || !result.error && !result.data) {
+      const { data: saved } = await table.select('title,body,mood,workbook_ref,updated_at')
+        .eq('id', id).eq('user_id', user.id).maybeSingle();
+      if (!saved || saved.title !== title || saved.body !== body
+        || saved.mood !== fields.mood || saved.workbook_ref !== fields.workbook_ref) return conflict;
+      revalidatePath('/journal');
+      revalidatePath('/');
+      return { updatedAt: saved.updated_at };
+    }
     if (result.error) return { error: 'Could not save the entry. Try again.' };
   }
   revalidatePath('/journal');

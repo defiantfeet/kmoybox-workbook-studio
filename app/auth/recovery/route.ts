@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { allowRecovery, authURL, clearRecovery, recoveryConfigured } from '../../../lib/auth/recovery';
+import { NextRequest } from 'next/server';
+import { allowRecovery, authRedirect, clearRecovery, recoveryConfigured } from '../../../lib/auth/recovery';
 import { demo, supabase } from '../../../lib/session';
 
 export async function GET(request: NextRequest) {
@@ -19,7 +19,5 @@ export async function GET(request: NextRequest) {
       }
     }
   }
-  return NextResponse.redirect(authURL(destination), {
-    headers: { 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer' },
-  });
+  return authRedirect(destination);
 }

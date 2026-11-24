@@ -52,6 +52,26 @@ export function ModuleEditor({ slug, id, version, initial }: {
     patch('blocks', blocks);
   }
 
+  async function importModule(file: File) {
+    setPreview(null);
+    setPreviewError('');
+    if (file.size > 500_000) {
+      setPreviewError('Choose a module JSON file smaller than 500 KB.');
+      return;
+    }
+    try {
+      const parsed = moduleSchema.safeParse(JSON.parse(await file.text()));
+      if (!parsed.success) {
+        const issue = parsed.error.issues[0];
+        setPreviewError(issue.path.join(' · ') + ': ' + issue.message);
+        return;
+      }
+      setContent(parsed.data);
+    } catch {
+      setPreviewError('Choose a valid module JSON file.');
+    }
+  }
+
   function showPreview() {
     const parsed = moduleSchema.safeParse(content);
     if (!parsed.success) {
@@ -66,6 +86,12 @@ export function ModuleEditor({ slug, id, version, initial }: {
   return <>
     <form action={submit} className="stack">
       <fieldset disabled={pending || !ready}>
+        {!id && <label>Import a module from JSON (optional)<input type="file" accept=".json,application/json"
+          onChange={event => {
+            const file = event.currentTarget.files?.[0];
+            event.currentTarget.value = '';
+            if (file) void importModule(file);
+          }} /></label>}
         <div className="editor-fields">
           <label>Module title<input required maxLength={120} value={content.title} onChange={event => patch('title', event.target.value)} /></label>
           <label>Chapter title<input required maxLength={120} list="workbook-chapters" value={content.chapter} onChange={event => patch('chapter', event.target.value)} /></label>

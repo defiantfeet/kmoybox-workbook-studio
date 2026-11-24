@@ -38,6 +38,11 @@ test('journal keeps unsaved text visible during a failed autosave and saves it o
   await reflection.fill('Keep this text while the connection is down.');
   await expect(composer.getByRole('alert')).toContainText('Could not save');
   await expect(reflection).toHaveValue('Keep this text while the connection is down.');
+  await expect(composer.getByRole('button', { name: 'Copy unsaved text' })).toBeVisible();
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.getByRole('link', { name: 'Goals', exact: true }).click();
+  await expect(page).toHaveURL(/\/journal$/);
+  await expect(reflection).toHaveValue('Keep this text while the connection is down.');
   await page.unroute('**/journal');
   await composer.getByRole('button', { name: 'Save entry' }).click();
   await expect(composer.getByRole('status')).toHaveText('Saved.');
