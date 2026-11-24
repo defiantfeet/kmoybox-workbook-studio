@@ -5,6 +5,8 @@ import { editorLibrary } from '../lib/workbooks/repository';
 import { ordered, slugSchema } from '../lib/workbooks/schema';
 import { StudioForm } from './forms';
 import { ModuleEditor } from './module-editor';
+import { contentEditorPath } from '../lib/becoming/content-catalog';
+import { demo } from '../lib/session';
 import { Heading } from './studio';
 
 export async function ContentEditor({ query }: { query: { workbook?: string; module?: string; saved?: string } }) {
@@ -19,6 +21,7 @@ export async function ContentEditor({ query }: { query: { workbook?: string; mod
 
   return <>
     <Heading title="Workbook content editor" subtitle="Create workbooks, build modules, and publish each module when it’s ready." />
+    {!demo && <p><Link className="text-button" href={contentEditorPath}>Personal Growth Content Manager</Link></p>}
     {!book ? <div className="editor-layout">
       <section className="panel form-panel">
         <h2>Workbooks</h2>
