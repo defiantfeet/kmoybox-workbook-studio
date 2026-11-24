@@ -59,7 +59,18 @@ test('confirmation, protected routes, profile, password recovery, and account de
   await page.reload();
   await signIn(page, address, originalPassword);
   await expect(page.getByRole('alert').filter({ hasText: 'Sign-in failed' })).toBeVisible();
+  const preview = await request.get(confirmation);
+  expect(preview.status()).toBe(200);
+  expect(preview.headers()['set-cookie']).toBeUndefined();
+  const crossSite = await request.post(route('/auth/confirm'), {
+    headers: { origin: 'https://example.test', 'sec-fetch-site': 'cross-site' },
+    form: { token_hash: new URL(confirmation).searchParams.get('token_hash')! },
+    maxRedirects: 0,
+  });
+  expect(crossSite.status()).toBe(303);
+  expect(crossSite.headers().location).toBe(route('/login?confirmation=failed'));
   await page.goto(confirmation);
+  await page.getByRole('button', { name: 'Confirm email' }).click();
   await expect(page.getByRole('heading', { name: /Welcome back, Synthetic/ })).toBeVisible();
   await expect(page.getByText('Set a goal with a target date this week to see it here.')).toBeVisible();
   for (const label of ['Exercises completed', 'Journal entries', 'Goals completed', 'Products owned']) {
@@ -118,6 +129,7 @@ test('confirmation, protected routes, profile, password recovery, and account de
     await second.getByRole('button', { name: 'Create your account' }).click();
     await expect(second.getByText(/Check your email for a confirmation link/)).toBeVisible();
     await second.goto(await emailLink(request, secondAddress, route('/auth/confirm'), origin));
+    await second.getByRole('button', { name: 'Confirm email' }).click();
     await expect(second.getByRole('heading', { name: /Welcome back, Independent/ })).toBeVisible();
     await expect(second.locator('.metric').filter({ hasText: 'Journal entries' }).locator('strong')).toHaveText('0');
     await expect(second.getByText(/workbook module complete/)).toHaveCount(0);
@@ -186,10 +198,12 @@ test('confirmation, protected routes, profile, password recovery, and account de
   await page.getByRole('button', { name: 'Send reset link' }).click();
   await expect(page.getByRole('status')).toContainText('If an account exists');
   const recovery = await emailLink(request, address, route('/auth/recovery'), origin);
+  expect((await request.get(recovery)).status()).toBe(200);
   const separate = await browser.newContext();
   try {
     const reset = await separate.newPage();
     await reset.goto(recovery);
+    await reset.getByRole('button', { name: 'Continue to password reset' }).click();
     await expect(reset.getByRole('heading', { name: 'Choose a new password' })).toBeVisible();
     const cookies = await separate.cookies();
     expect(cookies.find(cookie => cookie.name === 'studio-recovery')?.httpOnly).toBe(true);
@@ -199,6 +213,7 @@ test('confirmation, protected routes, profile, password recovery, and account de
     await reset.getByRole('button', { name: 'Update password' }).click();
     await expect(reset.getByText(/Password updated/)).toBeVisible();
     await reset.goto(recovery);
+    await reset.getByRole('button', { name: 'Continue to password reset' }).click();
     await expect(reset).toHaveURL(/\/forgot-password\?expired=1$/);
   } finally {
     await separate.close();

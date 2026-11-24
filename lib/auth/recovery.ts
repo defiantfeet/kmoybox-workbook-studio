@@ -23,9 +23,9 @@ export function authURL(path: string) {
   }
 }
 
-export function authRedirect(path: string) {
+export function authRedirect(path: string, status: 303 | 307 = 307) {
   return new Response(null, {
-    status: 307,
+    status,
     headers: { Location: studioPath(path), 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer' },
   });
 }
