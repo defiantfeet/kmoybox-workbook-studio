@@ -21,7 +21,7 @@ export async function workbookLibrary(): Promise<WorkbookOffer[]> {
   const { client } = await account();
   const { data, error } = await client.rpc('workbook_storefront');
   if (error) throw new Error('The workbook library could not load.');
-  return (data ?? []) as WorkbookOffer[];
+  return ((data ?? []) as WorkbookOffer[]).filter(book => !book.sample);
 }
 
 export async function publishedWorkbook(slug: string) {
@@ -42,7 +42,7 @@ export async function publishedWorkbook(slug: string) {
     const { data, error } = await client.from('engine_workbooks')
       .select('slug,title,summary,sample,engine_modules(id,content,revision)').eq('slug', slug).maybeSingle();
     if (error) throw new Error('The workbook could not load.');
-    if (!data) return null;
+    if (!data || data.sample) return null;
     book = data;
     modules = data.engine_modules;
     if (!modules.length) return null;

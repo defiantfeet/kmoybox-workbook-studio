@@ -30,9 +30,11 @@ export async function authenticate(_: ActionState, form: FormData): Promise<Acti
     if (!validPassword(password)) return error(passwordRule);
     const displayName = value(form, 'name').trim();
     if (displayName.length > 80) return error('Use a display name up to 80 characters.');
+    const confirmation = authURL('/auth/confirm');
+    if (!confirmation) return error('Registration is temporarily unavailable.');
     const result = await client.auth.signUp({
       email, password,
-      options: { data: { display_name: displayName }, emailRedirectTo: authURL('/auth/confirm').href },
+      options: { data: { display_name: displayName }, emailRedirectTo: confirmation.href },
     });
     if (result.error) return error('If you can’t register, try signing in or requesting a password reset.');
     if (result.data.session) await client.auth.signOut({ scope: 'local' });
@@ -55,7 +57,9 @@ export async function requestPasswordReset(_: ActionState, form: FormData): Prom
   if (!client || demo || !recoveryConfigured()) return error('Password reset is unavailable.');
   const email = value(form, 'email').trim();
   if (!emailSchema.safeParse(email).success) return error('Enter a valid email address.');
-  await client.auth.resetPasswordForEmail(email, { redirectTo: authURL('/auth/recovery').href });
+  const recovery = authURL('/auth/recovery');
+  if (!recovery) return error('Password reset is temporarily unavailable.');
+  await client.auth.resetPasswordForEmail(email, { redirectTo: recovery.href });
   return { message: sendMessage };
 }
 

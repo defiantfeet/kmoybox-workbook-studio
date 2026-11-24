@@ -1,4 +1,7 @@
 begin;
+-- The synthetic catalog doubles as the legacy authorization fixture.
+update public.products set sample = false where sample;
+update public.engine_workbooks set sample = false where slug = 'the-dancer-mindset';
 create extension if not exists pgtap with schema extensions;
 select plan(13);
 insert into auth.users (id, email) values

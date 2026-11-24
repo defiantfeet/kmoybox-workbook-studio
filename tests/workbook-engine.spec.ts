@@ -69,9 +69,16 @@ test('author creates, previews, edits and publishes a module without code', asyn
   await page.getByRole('textbox', { name: 'Description' }).fill('A workbook created from the editor.');
   await page.getByRole('button', { name: 'Create workbook' }).click();
   await page.getByRole('link', { name: 'New module' }).click();
+  await page.getByLabel('Import a module from JSON (optional)').setInputFiles({
+    name: 'module.json', mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      format: 1, title: 'Imported module', chapter: 'Begin here', chapterOrder: 1, order: 1,
+      blocks: [{ id: crypto.randomUUID(), kind: 'lesson', body: 'Take one easy breath.' }],
+    })),
+  });
+  await expect(page.getByRole('textbox', { name: 'Module title' })).toHaveValue('Imported module');
   await page.getByRole('textbox', { name: 'Module title' }).fill('Start with a pause');
   await page.getByLabel('Chapter title').fill('Begin here');
-  await page.getByRole('button', { name: 'Add block' }).click();
   await page.getByRole('textbox', { name: 'Lesson text' }).fill('Pause long enough to take one easy breath.');
   await page.getByLabel('Block type').selectOption('reflection');
   await page.getByRole('button', { name: 'Add block' }).click();

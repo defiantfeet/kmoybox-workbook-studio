@@ -46,9 +46,9 @@ export async function createWorkbook(_: ActionState, form: FormData): Promise<Ac
   if (!parsed.success) return error(parsed.error.issues[0].message);
   const book = { ...parsed.data, sample: false };
   if (session) {
-    const existing = await session.client.from('products').select('slug').eq('slug', book.slug).maybeSingle();
+    const existing = await session.client.rpc('editor_can_create_workbook', { book_slug: book.slug });
     if (existing.error) return error('Could not check the workbook URL.');
-    if (existing.data) return error('This workbook URL is already in use.');
+    if (!existing.data) return error('This workbook URL is already in use.');
     const result = await session.client.from('engine_workbooks').insert(book);
     if (result.error) return error(result.error.code === '23505' ? 'This workbook URL is already in use.' : 'Could not create the workbook.');
   } else {

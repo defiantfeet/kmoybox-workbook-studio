@@ -4,10 +4,13 @@ import { ArrowRight, BookOpen, Check, Feather, ShoppingBag, Sparkles, Target } f
 import { updateWeeklyGoal } from '../lib/actions';
 import { currentWeek, dailyReflection, dateKey, progress, type StudioData } from '../lib/model';
 import { StudioForm } from './forms';
+import { WorkbookOfferCard } from './storefront';
+import type { WorkbookOffer } from '../lib/workbooks/schema';
 import { Meter, ProductCard, WorkbookCover } from './studio';
 
-export function Dashboard({ name, data, now, completedModules }: { name: string; data: StudioData; now: Date; completedModules: number }) {
+export function Dashboard({ name, data, now, completedModules, engineLibrary }: { name: string; data: StudioData; now: Date; completedModules: number; engineLibrary: WorkbookOffer[] }) {
   const available = data.products.filter(product => product.free || data.purchased.includes(product.slug));
+  const interactive = engineLibrary.filter(book => book.unlocked);
   const workbooks = available.map(product => ({
     product,
     ...progress(product.slug, data.prompts, data.answers),
@@ -26,7 +29,7 @@ export function Dashboard({ name, data, now, completedModules }: { name: string;
     { title: 'Exercises completed', amount: workbooks.reduce((total, book) => total + book.done, 0), icon: BookOpen, tone: 'rose' },
     { title: 'Journal entries', amount: data.journal.length, icon: Feather, tone: 'sand' },
     { title: 'Goals completed', amount: data.goals.filter(goal => goal.completed).length, icon: Target, tone: 'lilac' },
-    { title: 'Products owned', amount: data.purchased.length, icon: ShoppingBag, tone: 'peach' },
+    { title: 'Products owned', amount: data.purchased.length + interactive.filter(book => book.owned).length, icon: ShoppingBag, tone: 'peach' },
   ];
 
   return <>
@@ -51,12 +54,18 @@ export function Dashboard({ name, data, now, completedModules }: { name: string;
                 {continuation.done ? 'Continue workbook' : 'Start workbook'} <ArrowRight size={16} aria-hidden />
               </Link>
             </div>
+          </article> : interactive.length ? <article className="panel form-panel">
+            <h3>{interactive[0].title}</h3>
+            <Link className="primary" href={'/workbooks/' + interactive[0].slug}>Open workbook <ArrowRight size={16} aria-hidden /></Link>
           </article> : <p className="panel empty">You’re all caught up. <Link href="/workbooks">Browse workbooks</Link></p>}
         </section>
 
         <section aria-labelledby="library-title" className="dashboard-section">
           <div className="section-head"><h2 id="library-title">Workbook Library</h2><Link className="text-button" href="/workbooks">Browse all <ArrowRight size={15} aria-hidden /></Link></div>
-          {available.length ? <div className="dashboard-library">{available.map(product => <ProductCard key={product.slug} product={product} data={data} compact />)}</div>
+          {available.length || interactive.length ? <div className="dashboard-library">
+            {available.map(product => <ProductCard key={product.slug} product={product} data={data} compact />)}
+            {interactive.map(book => <WorkbookOfferCard key={book.slug} book={book} />)}
+          </div>
             : <p className="panel empty">Your available workbooks will appear here.</p>}
         </section>
       </div>

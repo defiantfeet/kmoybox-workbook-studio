@@ -1,4 +1,6 @@
 begin;
+-- The synthetic catalog doubles as the legacy authorization fixture.
+update public.products set sample = false where sample;
 create extension if not exists pgtap with schema extensions;
 select plan(11);
 insert into auth.users (id, email, raw_user_meta_data) values

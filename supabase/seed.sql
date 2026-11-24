@@ -1,7 +1,7 @@
-insert into public.products (slug, title, summary, free) values
-('finding-my-voice', 'Finding My Voice', 'Make space for what you really think, feel, and need.', true),
-('the-boundaries-edit', 'The Boundaries Edit', 'Practice setting limits that protect your time and energy.', false),
-('becoming-her', 'Becoming Her', 'Picture the life you want and take one small step toward it.', false);
+insert into public.products (slug, title, summary, free, sample) values
+('finding-my-voice', 'Finding My Voice', 'Make space for what you really think, feel, and need.', true, true),
+('the-boundaries-edit', 'The Boundaries Edit', 'Practice setting limits that protect your time and energy.', false, true),
+('becoming-her', 'Becoming Her', 'Picture the life you want and take one small step toward it.', false, true);
 
 insert into public.prompts (id, product_slug, position, title, question) values
 (1, 'finding-my-voice', 1, 'Start with what you know', 'When do you feel most like yourself? Describe a recent moment.'),
