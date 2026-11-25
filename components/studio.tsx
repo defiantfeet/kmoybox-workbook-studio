@@ -1,7 +1,8 @@
+import { ReminderCenter } from './reminder-center';
 import { studioPath } from '../lib/studio-path';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, BookOpen, Feather, LayoutDashboard, LockKeyhole, Sparkles, Target, UserRound } from 'lucide-react';
+import { ArrowRight, BookOpen, Feather, LayoutDashboard, LockKeyhole, Sprout, Sparkles, Target, UserRound } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { progress, type Product, type StudioData } from '../lib/model';
 
@@ -10,6 +11,7 @@ export const pages = [
   { key: 'workbooks', title: 'Workbooks', icon: BookOpen, href: '/workbooks' },
   { key: 'journal', title: 'Journal', icon: Feather, href: '/journal' },
   { key: 'goals', title: 'Goals', icon: Target, href: '/goals' },
+  { key: 'becoming', title: 'Personal Growth', icon: Sprout, href: '/becoming' },
   { key: 'account', title: 'Account', icon: UserRound, href: '/account' },
 ];
 
@@ -20,6 +22,7 @@ export function Shell({ current, name, sample, children }: { current: string; na
       <Link href="/" className="brand"><span className="brand-icon"><Sparkles size={20} aria-hidden /></span><span><strong>KMOYBOX</strong><small>WORKBOOK STUDIO</small></span></Link>
       <nav aria-label="Studio navigation">
         {pages.map(({ key, title, icon: Icon, href }) => <Link key={key} aria-current={key === current ? 'page' : undefined} href={href}><Icon aria-hidden size={18} strokeWidth={1.7} />{title}</Link>)}
+        {current === 'becoming' && <Link href="/support" prefetch={false}>Support and safety</Link>}
       </nav>
       <div className="side-bottom"><p>Keep Me Out<br />of Your Box.</p><span>A SPACE OF YOUR OWN</span></div>
     </aside>
@@ -27,7 +30,7 @@ export function Shell({ current, name, sample, children }: { current: string; na
       <header className="topbar"><span>{pages.find(page => page.key === current)?.title ?? (current === 'progress' ? 'Progress' : current === 'content-editor' ? 'Content Editor' : current === 'purchases' ? 'Purchase history' : 'My Library')}</span>
         <div className="account">{sample && <small>Sample content</small>}<Link href="/account" className="avatar" aria-label="Open account">{name[0]?.toUpperCase() || 'K'}</Link></div>
       </header>
-      <main id="main" tabIndex={-1} className="content">{children}</main>
+      <main id="main" tabIndex={-1} className="content">{current === 'becoming' && !sample && <ReminderCenter />}{children}</main>
     </div>
   </div>;
 }

@@ -57,7 +57,7 @@ test('journal and goals can be created, edited, completed, and removed', async (
 test('dashboard sections, covers, and primary navigation work across viewport sizes', async ({ page }) => {
   await page.goto('/');
   const nav = page.getByRole('navigation', { name: 'Studio navigation' });
-  await expect(nav.getByRole('link')).toHaveText(['Dashboard', 'Workbooks', 'Journal', 'Goals', 'Account']);
+  await expect(nav.getByRole('link')).toHaveText(['Dashboard', 'Workbooks', 'Journal', 'Goals', 'Personal Growth', 'Account']);
   await expect(page.getByText('Sample content', { exact: true })).toBeVisible();
   for (const width of [1440, 820, 360]) {
     await page.setViewportSize({ width, height: 900 });

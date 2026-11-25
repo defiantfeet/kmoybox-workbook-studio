@@ -30,7 +30,7 @@ export function Account({ displayName, email, sample, canEdit }: { displayName: 
     </section>
     <section className="panel form-panel account-panel dashboard-section" aria-labelledby="personal-data-title">
       <h2 id="personal-data-title">Personal data</h2>
-      <p>Export or delete your journal entries, mood check-ins, goals, milestone history, and workbook responses. Your sign-in and purchases stay active.</p>
+      <p>Export or delete your journal entries, goals, milestone history, workbook responses, and Personal Growth exercises, check-ins, habits, and reflections. Your sign-in and purchases stay active.</p>
       <a className="secondary" href={studioPath('/personal-data')}>Download personal data (JSON)</a>
       <details className="edit">
         <summary>Delete personal activity</summary>
