@@ -2,13 +2,13 @@ import { studioPath } from '../lib/studio-path';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Check, Feather, ShoppingBag, Sparkles, Target } from 'lucide-react';
 import { updateWeeklyGoal } from '../lib/actions';
-import { currentWeek, dailyReflection, dateKey, progress, type StudioData } from '../lib/model';
+import { currentWeek, dateKey, progress, type StudioData } from '../lib/model';
 import { StudioForm } from './forms';
 import { WorkbookOfferCard } from './storefront';
 import type { WorkbookOffer } from '../lib/workbooks/schema';
 import { Meter, ProductCard, WorkbookCover } from './studio';
 
-export function Dashboard({ name, data, now, completedModules, engineLibrary }: { name: string; data: StudioData; now: Date; completedModules: number; engineLibrary: WorkbookOffer[] }) {
+export function Dashboard({ name, data, now, completedModules, engineLibrary, reflection }: { name: string; data: StudioData; now: Date; completedModules: number; engineLibrary: WorkbookOffer[]; reflection: { prompt: string; reference: string } }) {
   const available = data.products.filter(product => product.free || data.purchased.includes(product.slug));
   const interactive = engineLibrary.filter(book => book.unlocked);
   const workbooks = available.map(product => ({
@@ -75,8 +75,8 @@ export function Dashboard({ name, data, now, completedModules, engineLibrary }: 
           <div className="section-head"><h2 id="reflection-title">Daily Reflection</h2></div>
           <article className="panel reflection">
             <Sparkles size={19} strokeWidth={1.6} aria-hidden />
-            <p>{dailyReflection(now)}</p>
-            <Link className="text-button" href="/journal?reflection=today#new-entry">Reflect in your journal <ArrowRight size={15} aria-hidden /></Link>
+            <p>{reflection.prompt}</p>
+            <Link className="text-button" prefetch={false} href={'/journal?reflection=' + encodeURIComponent(reflection.reference) + '#new-entry'}>Reflect in your journal <ArrowRight size={15} aria-hidden /></Link>
           </article>
         </section>
 

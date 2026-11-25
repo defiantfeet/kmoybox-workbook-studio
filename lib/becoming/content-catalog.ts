@@ -1,4 +1,7 @@
 export const contentEditorPath = '/content-editor/personal-growth';
+export const dailyReflectionDestination = 'dashboard-daily-reflection';
+export const dailyReflectionDestinationLabel = 'Dashboard → Daily Reflection';
+
 export const contentKinds = {
   prompt: 'Reflection prompt', emotion: 'Emotion vocabulary', value: 'Personal value',
   habit: 'Habit template', scenario: 'Social communication scenario', participation: 'Social participation suggestion',

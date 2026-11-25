@@ -53,7 +53,7 @@ async function readPages<T>(read: (start: number, end: number) => PromiseLike<{ 
 }
 
 export async function studio(now = studioDay(new Date())) {
-  if (demo) return { data: await demoSnapshot(now), name: 'Alex', displayName: 'Alex Morgan', email: 'alex@example.com' };
+  if (demo) return { data: await demoSnapshot(now), name: 'Alex', displayName: 'Alex Morgan', email: 'alex@example.com', client: null };
   const { client, user } = await account();
   const [products, prompts, entitlements, answers, journal, goals, milestones, activity, profile] = await Promise.all([
     client.from('products').select('slug,title,summary,free').eq('sample', false).order('free', { ascending: false }).order('slug'),
@@ -89,5 +89,5 @@ export async function studio(now = studioDay(new Date())) {
     answers: answers.data ?? [], journal: journal.data ?? [], goals: goals.data ?? [], milestones: milestones.data ?? [], activity: activity.data ?? [],
   };
   const displayName = profile.data?.display_name ?? '';
-  return { data, name: displayName.split(/\s+/)[0], displayName, email: user.email };
+  return { data, name: displayName.split(/\s+/)[0], displayName, email: user.email, client };
 }

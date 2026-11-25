@@ -6,7 +6,7 @@ import { GrowthContentCopy } from '../../../components/growth-content-copy';
 import { Heading, Shell } from '../../../components/studio';
 import { modules, findModule } from '../../../lib/becoming/catalog';
 import { saveGrowthContent } from '../../../lib/becoming/content-actions';
-import { contentEditorPath, contentKinds, type ContentVersion } from '../../../lib/becoming/content-catalog';
+import { contentEditorPath, contentKinds, dailyReflectionDestination, dailyReflectionDestinationLabel, type ContentVersion } from '../../../lib/becoming/content-catalog';
 import { editorContent } from '../../../lib/becoming/content-data';
 import { editorAccess } from '../../../lib/workbooks/repository';
 import { demo } from '../../../lib/session';
@@ -50,7 +50,7 @@ export default async function GrowthContentEditor({ searchParams }: {
   };
   return <Shell current="content-editor" name={String(user.user_metadata?.display_name ?? 'Editor')} sample={false}>
     <Link href="/content-editor" className="text-button back">Workbook content editor</Link>
-    <Heading title="Personal Growth Content Manager" subtitle="Prepare and publish resources for The Becoming Studio." />
+    <Heading title="Personal Growth Content Manager" subtitle="Prepare and publish prompts and resources for the studio." />
     <div className="editor-layout">
       <section className="panel form-panel" aria-labelledby="growth-editor-list">
         <h2 id="growth-editor-list">Content library</h2>
@@ -80,7 +80,9 @@ export default async function GrowthContentEditor({ searchParams }: {
         <StudioForm key={(editing?.id ?? 'new') + (current?.revision ?? 0)} className="stack"
           action={saveGrowthContent.bind(null, editing?.id ?? null, editing?.revision ?? 0)}>
           {editing ? <>
-            <p>{contentKinds[editing.kind]} · {editing.module_slug ? findModule(editing.module_slug)?.title : 'Default destination'}</p>
+            <p>{contentKinds[editing.kind]} · {editing.module_slug === dailyReflectionDestination
+              ? dailyReflectionDestinationLabel
+              : editing.module_slug ? findModule(editing.module_slug)?.title : 'Default destination'}</p>
             <input type="hidden" name="kind" value={editing.kind} />
             <input type="hidden" name="target" value={editing.module_slug ?? ''} />
           </> : <>
@@ -89,6 +91,7 @@ export default async function GrowthContentEditor({ searchParams }: {
             </select></label>
             <label>Destination<select name="target" defaultValue={source ? data.selected?.module_slug ?? '' : ''}>
               <option value="">Default destination for content type</option>
+              <option value={dailyReflectionDestination}>{dailyReflectionDestinationLabel}</option>
               {modules.map(module => <option key={module.slug} value={module.slug}>{module.title}</option>)}
             </select></label>
           </>}

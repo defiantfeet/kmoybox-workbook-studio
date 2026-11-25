@@ -6,14 +6,14 @@ import type { ActionState } from '../actions';
 import { demo } from '../session';
 import { editorAccess } from '../workbooks/repository';
 import { findModule } from './catalog';
-import { contentEditorPath, contentKinds, type ContentKind } from './content-catalog';
+import { contentEditorPath, contentKinds, dailyReflectionDestination, type ContentKind } from './content-catalog';
 
 export async function saveGrowthContent(id: string | null, revision: number, _: ActionState, form: FormData): Promise<ActionState> {
   if (demo) notFound();
   const { client } = await editorAccess();
   const schema = z.object({
     kind: z.enum(Object.keys(contentKinds) as ContentKind[]),
-    target: z.string().refine(value => !value || Boolean(findModule(value))),
+    target: z.string().refine(value => !value || value === dailyReflectionDestination || Boolean(findModule(value))),
     title: z.string().trim().min(1).max(120),
     body: z.string().trim().max(8000),
     category: z.string().trim().max(120),
@@ -25,6 +25,8 @@ export async function saveGrowthContent(id: string | null, revision: number, _: 
   const fail = (message: string): ActionState => ({ error: true, message });
   if (!parsed.success || (id && !z.uuid().safeParse(id).success)) return fail('Check the title, destination, content, and publish date.');
   const value = parsed.data;
+  if (value.target === dailyReflectionDestination && value.kind !== 'prompt')
+    return fail('Choose Reflection prompt for Dashboard → Daily Reflection.');
   if (value.kind === 'availability' && !value.target) return fail('Choose a module for this availability setting.');
   if (!['availability','category'].includes(value.kind) && !value.body) return fail('Enter the content members will see.');
   const scheduled = value.action === 'scheduled' && value.schedule ? value.schedule + 'Z' : null;

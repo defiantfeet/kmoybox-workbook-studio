@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(30);
+select plan(38);
 
 insert into auth.users(id,email) values ('00000000-0000-4000-8000-000000002401','content-editor@example.test'),
   ('00000000-0000-4000-8000-000000002402','content-member@example.test');
@@ -48,6 +48,16 @@ select lives_ok($$select public.save_growth_content(current_setting('test.growth
   'prompt',null,'Cancelled publication','Draft text','',true,'draft',null)$$,'editor can return scheduled content to draft');
 select is((select state from public.growth_content_current
   where id=current_setting('test.growth_cancelled_item')::uuid),'draft','the cancelled item reopens as draft');
+select set_config('test.earlier_reflection',
+  public.save_growth_content(null,0,'prompt','dashboard-daily-reflection','A previous reflection','Earlier prompt','',true,
+    'published',null)::text,true);
+select set_config('test.latest_reflection',
+  public.save_growth_content(null,0,'prompt','dashboard-daily-reflection','Z latest reflection','Latest prompt','',true,
+    'published',current_setting('test.growth_due_at')::timestamptz)::text,true);
+select is((select body from public.daily_reflection()),'Earlier prompt','the dashboard keeps the earlier prompt until release');
+select throws_ok($$select public.save_growth_content(null,0,'availability','dashboard-daily-reflection','Invalid setting','',
+  '',true,'published',null)$$,'23514',null,'only reflection prompts can use the dashboard destination');
+
 reset role;
 insert into auth.users(id,email)
 select ('00000000-0000-4000-8000-' || lpad(i::text,12,'0'))::uuid, 'synthetic-content-' || i || '@example.test' from generate_series(2420,2430) i;
@@ -62,6 +72,22 @@ select is((select count(*) from growth_editor_private.module_visits where month 
 select pg_sleep(greatest(0, extract(epoch from current_setting('test.growth_due_at')::timestamptz - clock_timestamp())));
 set local role authenticated;
 select is((select title from public.published_growth_content()),'Scheduled text','scheduled revision takes effect when due');
+select is((select body from public.daily_reflection()),'Latest prompt','the most recently effective dashboard reflection wins');
+select is((select body from public.daily_reflection(current_setting('test.earlier_reflection')::uuid,1)),'Earlier prompt',
+  'a journal link keeps the available prompt shown on the dashboard');
+select public.save_growth_content(current_setting('test.earlier_reflection')::uuid,1,'prompt','dashboard-daily-reflection',
+  'A previous reflection','Updated prompt','',true,'published',null);
+select is((select body from public.daily_reflection(current_setting('test.earlier_reflection')::uuid,1)),'Earlier prompt',
+  'a journal link keeps the shown prompt across an update to the same item');
+select public.save_growth_content(current_setting('test.earlier_reflection')::uuid,2,'prompt','dashboard-daily-reflection',
+  'A previous reflection','Updated prompt','',true,'archived',null);
+select is((select body from public.daily_reflection(current_setting('test.earlier_reflection')::uuid,1)),'Latest prompt',
+  'a journal link switches to the current prompt when its item is archived');
+select is((select count(*) from public.published_growth_content() where module_slug='dashboard-daily-reflection'),0::bigint,
+  'dashboard prompts stay out of Personal Growth resources');
+select throws_ok($$select * from growth_editor_private.effective_publications$$,'42501',null,
+  'authenticated clients cannot query the private publication view directly');
+
 select is((select count(*) from public.published_growth_content() where title='Scheduled text'),1::bigint,
   'repeated reads return one publication after the scheduled time');
 select is((select count(*) from public.growth_content_versions

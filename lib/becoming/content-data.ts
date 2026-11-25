@@ -1,9 +1,28 @@
 import 'server-only';
 
+import { z } from 'zod';
+import { dailyReflection, dateKey } from '../model';
 import type { account } from '../data';
 import type { ContentItem, ContentKind, ContentVersion, PublishedContent } from './content-catalog';
 
 type Client = Awaited<ReturnType<typeof account>>['client'];
+
+export async function dashboardReflection(client: Client | null, day: Date, reference?: string) {
+  const fallback = (date: Date) => ({ prompt: dailyReflection(date), reference: dateKey(date) });
+  const date = z.iso.date().safeParse(reference);
+  if (date.success) return fallback(new Date(date.data + 'T00:00:00Z'));
+  if (!client) return fallback(day);
+
+  const [item, revision, ...extra] = (reference ?? '').split(':');
+  const validReference = extra.length === 0 && z.uuid().safeParse(item).success && /^[1-9]\d{0,9}$/.test(revision ?? '')
+    && Number(revision) <= 2147483647;
+  const { data, error } = await client.rpc('daily_reflection', {
+    requested_item: validReference ? item : null,
+    requested_revision: validReference ? Number(revision) : null,
+  }).maybeSingle<{ item_id: string; revision: number; body: string }>();
+  if (error) throw new Error('The daily reflection could not load.');
+  return data ? { prompt: data.body, reference: data.item_id + ':' + data.revision } : fallback(day);
+}
 
 export async function publishedGrowthContent(client: Client | null): Promise<PublishedContent[]> {
   if (!client) return [];
