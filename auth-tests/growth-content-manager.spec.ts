@@ -28,13 +28,26 @@ test('editor drafts, previews, publishes, and archives member-facing growth cont
   await page.goto(prefix + '/becoming');
   await expect(page.getByRole('heading', { name: title })).toHaveCount(0);
   await page.goto(item);
-  const nextDay = new Date(Date.now() + 86400000).toISOString().slice(0, 16);
-  await page.getByLabel('Scheduled publication (UTC)').fill(nextDay);
+  const scheduledAt = new Date(Math.ceil((Date.now() + 20000) / 1000) * 1000);
+  const utcInput = scheduledAt.toISOString().slice(0, scheduledAt.getUTCSeconds() ? 19 : 16);
+  await page.getByLabel('Scheduled publication (UTC)').fill(utcInput);
   await page.getByRole('button', { name: 'Schedule publication' }).click();
-  await expect(preview.getByText(/Version 2 · scheduled/)).toBeVisible();
+  await expect(preview.getByText(/Version 2 · scheduled · Saved at/)).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel('Scheduled publication (UTC)')).toHaveValue(utcInput);
+  const scheduledFor = page.getByRole('region', { name: 'Edit content' })
+    .locator('form p', { hasText: 'Scheduled for' }).locator('time');
+  await expect(scheduledFor).toHaveAttribute('datetime', scheduledAt.toISOString());
   await page.goto(prefix + '/becoming');
   await expect(page.getByRole('heading', { name: title })).toHaveCount(0);
+  await expect(async () => {
+    await page.reload();
+    await expect(page.getByRole('heading', { name: title })).toHaveCount(1, { timeout: 500 });
+  }).toPass({ timeout: 30000, intervals: [1000] });
+  await page.reload();
+  await expect(page.getByRole('heading', { name: title })).toHaveCount(1);
   await page.goto(item);
+  await expect(preview.getByText(/Version 2 · published · Saved at/)).toBeVisible();
   await page.getByRole('button', { name: 'Publish now' }).click();
   await expect(preview.getByText(/Version 3 · published/)).toBeVisible();
   await page.goto(prefix + '/becoming');

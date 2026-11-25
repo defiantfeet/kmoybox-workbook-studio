@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(30);
 
 insert into auth.users(id,email) values ('00000000-0000-4000-8000-000000002401','content-editor@example.test'),
   ('00000000-0000-4000-8000-000000002402','content-member@example.test');
@@ -31,14 +31,24 @@ select is((select count(*) from public.growth_exercises),0::bigint,'editor role 
 select throws_ok($$select * from growth_editor_private.module_visits$$,'42501',null,'editor cannot read visit rows');
 select lives_ok($$select public.save_growth_content('00000000-0000-4000-8000-000000002403',1,'prompt','thought-record',
   'Draft text','New draft','Learning',true,'draft',null)$$,'editor can save a draft revision');
+select set_config('test.growth_due_at', (statement_timestamp() + interval '4 seconds')::text, true);
 select lives_ok($$select public.save_growth_content('00000000-0000-4000-8000-000000002403',2,'prompt','thought-record',
-  'Scheduled text','Scheduled version','Learning',true,'published',now()+interval '1 day')$$,'editor can schedule a future revision');
+  'Scheduled text','Scheduled version','Learning',true,'published',current_setting('test.growth_due_at')::timestamptz)$$,'editor can schedule a future revision');
 select throws_ok($$select public.save_growth_content('00000000-0000-4000-8000-000000002403',2,'prompt','thought-record',
   'Stale text','Stale version','Learning',true,'draft',null)$$,'40001',null,'stale edits cannot overwrite history');
 select is((select count(*) from public.growth_content_versions),3::bigint,'editor sees all revisions');
 select is((select title from public.published_growth_content()),'Earlier publication','drafts and future schedules do not replace current content');
+select is((select effective_at from public.growth_content_current
+  where id='00000000-0000-4000-8000-000000002403'),
+  current_setting('test.growth_due_at')::timestamptz,'the editor view returns the exact stored instant');
+select set_config('test.growth_cancelled_item',
+  public.save_growth_content(null,0,'prompt',null,'Cancelled publication','Cancelled text','',true,'published',
+    current_setting('test.growth_due_at')::timestamptz)::text,true);
+select lives_ok($$select public.save_growth_content(current_setting('test.growth_cancelled_item')::uuid,1,
+  'prompt',null,'Cancelled publication','Draft text','',true,'draft',null)$$,'editor can return scheduled content to draft');
+select is((select state from public.growth_content_current
+  where id=current_setting('test.growth_cancelled_item')::uuid),'draft','the cancelled item reopens as draft');
 reset role;
-update public.growth_content_versions set effective_at=now()-interval '1 minute' where revision=3;
 insert into auth.users(id,email)
 select ('00000000-0000-4000-8000-' || lpad(i::text,12,'0'))::uuid, 'synthetic-content-' || i || '@example.test' from generate_series(2420,2430) i;
 insert into growth_editor_private.module_visits
@@ -49,8 +59,15 @@ values ((date_trunc('month',now() at time zone 'UTC')-interval '1 month')::date,
 select is((select count(*) from growth_editor_private.module_visits where month = date_trunc('month',now() at time zone 'UTC')::date),
   1::bigint,'repeat visits create one monthly record');
 
+select pg_sleep(greatest(0, extract(epoch from current_setting('test.growth_due_at')::timestamptz - clock_timestamp())));
 set local role authenticated;
 select is((select title from public.published_growth_content()),'Scheduled text','scheduled revision takes effect when due');
+select is((select count(*) from public.published_growth_content() where title='Scheduled text'),1::bigint,
+  'repeated reads return one publication after the scheduled time');
+select is((select count(*) from public.growth_content_versions
+  where item_id='00000000-0000-4000-8000-000000002403'),3::bigint,'publication creates no additional revision');
+select is((select count(*) from public.published_growth_content()
+  where item_id=current_setting('test.growth_cancelled_item')::uuid),0::bigint,'the cancelled revision stays unpublished after its due time');
 select is((select member_floor from public.growth_content_engagement()),10::bigint,'closed month counts are bucketed and small groups are suppressed');
 select lives_ok($$select public.save_growth_content('00000000-0000-4000-8000-000000002403',3,'prompt','thought-record',
   'Archived text','Archived version','Learning',true,'archived',null)$$,'editor can archive content');

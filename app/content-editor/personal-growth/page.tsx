@@ -20,7 +20,7 @@ function status(version: ContentVersion) {
 }
 
 function stamp(value: string) {
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }).format(new Date(value)) + ' UTC';
+  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'UTC' }).format(new Date(value)) + ' UTC';
 }
 
 export default async function GrowthContentEditor({ searchParams }: {
@@ -41,6 +41,9 @@ export default async function GrowthContentEditor({ searchParams }: {
   const current = data.current;
   const source = params.copy === '1' && data.selected?.kind === 'exercise';
   const editing = source ? null : data.selected;
+  const scheduledFor = editing && current?.effective_at && status(current) === 'scheduled'
+    ? new Date(current.effective_at).toISOString()
+    : undefined;
   const history = (offset: number) => {
     const filter = new URLSearchParams({ q: query, kind, state, page: String(offset) });
     return contentEditorPath + '?' + filter.toString();
@@ -94,7 +97,9 @@ export default async function GrowthContentEditor({ searchParams }: {
           <label>Category<input name="category" list="published-growth-categories" maxLength={120} defaultValue={current?.category} /></label>
           <datalist id="published-growth-categories">{data.categories.map(category => <option key={category.item_id} value={category.title} />)}</datalist>
           <label className="habit-check"><input name="available" type="checkbox" defaultChecked={current?.available ?? true} /> Module available (availability items only)</label>
-          <label>Scheduled publication (UTC)<input type="datetime-local" name="schedule" /></label>
+          <label>Scheduled publication (UTC)<input type="datetime-local" name="schedule" step="any"
+            defaultValue={scheduledFor?.slice(0, -1)} /></label>
+          {scheduledFor && <p>Scheduled for <time dateTime={scheduledFor}>{stamp(scheduledFor)}</time></p>}
           <div className="growth-actions">
             <button className="secondary" name="action" value="draft">Save draft</button>
             <button className="primary" name="action" value="published">Publish now</button>
@@ -108,8 +113,8 @@ export default async function GrowthContentEditor({ searchParams }: {
           {editing.kind === 'exercise' && <Link href={contentEditorPath + '?item=' + editing.id + '&copy=1'}>Create a draft from this template</Link>}
           <h3>Version history</h3>
           <ul className="editor-list">{data.versions.map(version => <li key={version.revision}>
-            <details><summary>Version {version.revision} · {status(version)} · {stamp(version.saved_at)}</summary>
-              {version.effective_at && <p>Effective {stamp(version.effective_at)}</p>}
+            <details><summary>Version {version.revision} · {status(version)} · Saved at <time dateTime={version.saved_at}>{stamp(version.saved_at)}</time></summary>
+              {version.effective_at && <p>{status(version) === 'scheduled' ? 'Scheduled for' : 'Effective'} <time dateTime={version.effective_at}>{stamp(version.effective_at)}</time></p>}
               <GrowthContentCopy copy={version} kind={editing.kind} />
             </details>
           </li>)}</ul>

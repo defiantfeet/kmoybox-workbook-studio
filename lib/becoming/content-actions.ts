@@ -18,7 +18,7 @@ export async function saveGrowthContent(id: string | null, revision: number, _: 
     body: z.string().trim().max(8000),
     category: z.string().trim().max(120),
     action: z.enum(['draft', 'published', 'scheduled', 'archived']),
-    schedule: z.union([z.literal(''), z.iso.datetime({ local: true })]),
+    schedule: z.union([z.literal(''), z.iso.datetime({ local: true }).refine(value => !value.endsWith('Z'))]),
   });
   const parsed = schema.safeParse(Object.fromEntries(['kind','target','title','body','category','action','schedule']
     .map(key => [key, form.get(key)])));
@@ -27,13 +27,14 @@ export async function saveGrowthContent(id: string | null, revision: number, _: 
   const value = parsed.data;
   if (value.kind === 'availability' && !value.target) return fail('Choose a module for this availability setting.');
   if (!['availability','category'].includes(value.kind) && !value.body) return fail('Enter the content members will see.');
-  if (value.action === 'scheduled' && (!value.schedule || Date.parse(value.schedule + 'Z') <= Date.now()))
+  const scheduled = value.action === 'scheduled' && value.schedule ? value.schedule + 'Z' : null;
+  if (value.action === 'scheduled' && !(scheduled && Date.parse(scheduled) > Date.now()))
     return fail('Enter a future UTC publish date and time.');
   const { data, error } = await client.rpc('save_growth_content', {
     item: id, expected: revision, content_kind: value.kind, target: value.target || null,
     heading: value.title, copy: value.body, category_name: value.category, enabled: form.get('available') === 'on',
     stage: value.action === 'scheduled' ? 'published' : value.action,
-    scheduled: value.action === 'scheduled' ? value.schedule + 'Z' : null,
+    scheduled,
   });
   if (error?.code === '40001') return fail('This item changed. Reload it before saving again.');
   if (error?.code === '23505') return fail('This module already has an availability setting. Edit that item instead.');
