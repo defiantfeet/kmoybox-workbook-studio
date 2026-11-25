@@ -321,7 +321,14 @@ fieldset.exercise-options { display: grid; gap: 10px; }
 .values-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 8px; }
 .values-option, .values-definition { border: 1px solid var(--line); border-radius: 8px; padding: 9px; }
 .values-option { display: flex; align-items: flex-start; gap: 8px; }
-.values-option input { flex: none; margin-top: 4px; accent-color: #526b55; }
+.values-option input[type="checkbox"] {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 4px;
+  padding: 0;
+  accent-color: #526b55;
+}
 .values-option small { display: block; }
 .values-option:has(input:checked) { background: #edf2e9; border-color: #859883; }
 .values-reflection { margin-top: 18px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; }
@@ -383,8 +390,9 @@ fieldset.exercise-options { display: grid; gap: 10px; }
 .emotion-svg g text { font-size: 12px; font-weight: 680; fill: #26332d; pointer-events: none; }
 .emotion-center { fill: white; font-size: 13px; font-weight: 750; }
 .emotion-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 6px; }
-.emotion-option { align-items: center; }
-.emotion-option input { margin: 0; }
+.emotion-option { align-items: center; min-height: 44px; }
+.emotion-option input[type="checkbox"] { margin: 0; }
+.emotion-option > span { min-width: 0; overflow-wrap: anywhere; }
 .emotion-categories details { border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; margin-bottom: 6px; }
 .emotion-categories summary { font-weight: 700; }
 .emotion-chips { display: flex; flex-wrap: wrap; gap: 5px; list-style: none; padding: 0; }
